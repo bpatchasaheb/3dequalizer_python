@@ -8,17 +8,36 @@
 
 WINDOW_TITLE = "Bake PGroup edit/filtered curves v1.4"
 
+def calc_range_toggle_rdo_btn_clicked(req, widget, action):
+	if tde4.getWidgetValue(req, "calc_range_rdo_btn") == 1:
+		tde4.setWidgetValue(req, "full_range_rdo_btn", "0")
+
+def full_range_toggle_rdo_btn_clicked(req, widget, action):
+	if tde4.getWidgetValue(req, "full_range_rdo_btn") == 1:
+		tde4.setWidgetValue(req, "calc_range_rdo_btn", "0")
+
+
 def snap_filtered_to_edit_btn_clicked(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	cam = tde4.getCurrentCamera()
 	tde4.copyPGroupEditCurvesToFilteredCurves(pg, cam)
+	if tde4.getWidgetValue(req, "full_range_rdo_btn") == 1:
+		current_mode = tde4.getCameraFrameRangeCalculationFlag(cam)
+		tde4.setCameraFrameRangeCalculationFlag(cam, 0)
+		tde4.copyPGroupEditCurvesToFilteredCurves(pg, cam)
+		tde4.setCameraFrameRangeCalculationFlag(cam, current_mode)
 
 def snap_edit_to_filtered_btn_clicked(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	cam = tde4.getCurrentCamera()
 	frames = tde4.getCameraNoFrames(cam)
 	pg_type = tde4.getPGroupType(pg)
-	for frame in range(1, frames+1):
+	if tde4.getWidgetValue(req, "calc_range_rdo_btn") == 1:
+		calc_range = tde4.getCameraCalculationRange(cam)
+		start_frame, end_frame = calc_range
+	if tde4.getWidgetValue(req, "full_range_rdo_btn") == 1:
+		start_frame, end_frame = 1, frames
+	for frame in range(start_frame, end_frame+1):
 		pos = tde4.getPGroupPosition3D(pg, cam, frame)
 		rot = tde4.getPGroupRotation3D(pg, cam, frame)
 		scale = tde4.getPGroupScale3D(pg)
@@ -42,6 +61,14 @@ tde4.addLabelWidget(req,"filtered_curves_label","Filtered curves:   Smooth curve
 tde4.setWidgetOffsets(req,"filtered_curves_label",7,95,10,0)
 tde4.setWidgetAttachModes(req,"filtered_curves_label","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"filtered_curves_label",200,20)
+tde4.addToggleWidget(req,"calc_range_rdo_btn","Calculation Range",1)
+tde4.setWidgetOffsets(req,"calc_range_rdo_btn",160,0,15,0)
+tde4.setWidgetAttachModes(req,"calc_range_rdo_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"calc_range_rdo_btn",20,20)
+tde4.addToggleWidget(req,"full_range_rdo_btn","Full Frame Range",0)
+tde4.setWidgetOffsets(req,"full_range_rdo_btn",360,0,15,0)
+tde4.setWidgetAttachModes(req,"full_range_rdo_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"full_range_rdo_btn",20,20)
 tde4.addButtonWidget(req,"snap_edit_to_filtered_btn","Snap Edit curves to Filtered curves")
 tde4.setWidgetOffsets(req,"snap_edit_to_filtered_btn",15,85,20,0)
 tde4.setWidgetAttachModes(req,"snap_edit_to_filtered_btn","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
@@ -52,12 +79,16 @@ tde4.setWidgetAttachModes(req,"snap_filtered_to_edit_btn","ATTACH_POSITION","ATT
 tde4.setWidgetSize(req,"snap_filtered_to_edit_btn",80,20)
 tde4.setWidgetLinks(req,"edit_curves_label","","","","")
 tde4.setWidgetLinks(req,"filtered_curves_label","","","edit_curves_label","")
-tde4.setWidgetLinks(req,"snap_edit_to_filtered_btn","","","filtered_curves_label","")
+tde4.setWidgetLinks(req,"calc_range_rdo_btn","","","filtered_curves_label","")
+tde4.setWidgetLinks(req,"full_range_rdo_btn","","","filtered_curves_label","")
+tde4.setWidgetLinks(req,"snap_edit_to_filtered_btn","","","calc_range_rdo_btn","")
 tde4.setWidgetLinks(req,"snap_filtered_to_edit_btn","","","snap_edit_to_filtered_btn","")
 
 # Callbacks
+tde4.setWidgetCallbackFunction(req, "calc_range_rdo_btn", "calc_range_toggle_rdo_btn_clicked")
+tde4.setWidgetCallbackFunction(req, "full_range_rdo_btn", "full_range_toggle_rdo_btn_clicked")
 tde4.setWidgetCallbackFunction(req, "snap_filtered_to_edit_btn", "snap_filtered_to_edit_btn_clicked")
 tde4.setWidgetCallbackFunction(req, "snap_edit_to_filtered_btn", "snap_edit_to_filtered_btn_clicked")
 
-tde4.postCustomRequesterAndContinue(req,WINDOW_TITLE,400,155)
+tde4.postCustomRequesterAndContinue(req,WINDOW_TITLE,400,190)
 
