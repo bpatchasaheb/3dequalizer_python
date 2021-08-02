@@ -16,7 +16,6 @@ def full_range_toggle_rdo_btn_clicked(req, widget, action):
 	if tde4.getWidgetValue(req, "full_range_rdo_btn") == 1:
 		tde4.setWidgetValue(req, "calc_range_rdo_btn", "0")
 
-
 def snap_filtered_to_edit_btn_clicked(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	cam = tde4.getCurrentCamera()
