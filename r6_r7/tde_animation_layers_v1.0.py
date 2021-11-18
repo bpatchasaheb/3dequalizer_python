@@ -4,7 +4,7 @@
 # 3DE4.script.gui: Orientation Controls::Edit
 # 3DE4.script.gui.button: Lineup Controls::Anim Layers, align-bottom-left, 80,20
 # 3DE4.script.gui.button: Orientation Controls::Anim Layers, align-bottom-left, 70,20
-# 3DE4.script.comment:  This script works as Animation Layers in Maya.
+# 3DE4.script.comment:  This tool works as Animation Layers in Maya.
 # 3DE4.script.gui.config_menus: true
 
 # Patcha Saheb(patchasaheb@gmail.com)
