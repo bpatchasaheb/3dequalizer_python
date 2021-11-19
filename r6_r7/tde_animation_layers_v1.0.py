@@ -73,10 +73,6 @@ def get_curve_min_max_y_value(curve_list):
                 key_data.append(pos2d[1])
     if len(key_data) >= 1:
         min_max_values = [min(key_data), max(key_data)]
-
-
-
-
     return min_max_values
 
 
@@ -118,16 +114,17 @@ def view_all_btn_clicked(req, widget, action):
 
 
 req = tde4.createCustomRequester()
+
 tde4.addListWidget(req,"layers_list_wdgt","",1)
-tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,60)
+tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,90)
 tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"layers_list_wdgt",280,150)
 tde4.addCurveAreaWidget(req,"curve_area_wdgt","")
 tde4.setWidgetOffsets(req,"curve_area_wdgt",5,5,25,30)
 tde4.setWidgetAttachModes(req,"curve_area_wdgt","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"curve_area_wdgt",150,150)
-tde4.addTextFieldWidget(req,"pgroup_name_wdgt","PGroup","")
-tde4.setWidgetOffsets(req,"pgroup_name_wdgt",65,5,25,0)
+tde4.addTextFieldWidget(req,"pgroup_name_wdgt","","")
+tde4.setWidgetOffsets(req,"pgroup_name_wdgt",5,5,25,0)
 tde4.setWidgetAttachModes(req,"pgroup_name_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"pgroup_name_wdgt",200,20)
 tde4.setWidgetSensitiveFlag(req,"pgroup_name_wdgt",0)
@@ -292,13 +289,21 @@ tde4.setWidgetOffsets(req,"update_viewport_btn",0,7,7,0)
 tde4.setWidgetAttachModes(req,"update_viewport_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"update_viewport_btn",145,20)
 tde4.addScaleWidget(req,"weight_slider_wdgt","Weight","DOUBLE",0.0,1.0,1.0)
-tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,30,35,0)
+tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,60,36,0)
 tde4.setWidgetAttachModes(req,"weight_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"weight_slider_wdgt",200,20)
 tde4.addButtonWidget(req,"weight_key_btn","K")
-tde4.setWidgetOffsets(req,"weight_key_btn",5,5,35,0)
+tde4.setWidgetOffsets(req,"weight_key_btn",5,35,36,0)
 tde4.setWidgetAttachModes(req,"weight_key_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"weight_key_btn",30,20)
+tde4.addButtonWidget(req,"weight_key_delete_btn","D")
+tde4.setWidgetOffsets(req,"weight_key_delete_btn",32,5,36,0)
+tde4.setWidgetAttachModes(req,"weight_key_delete_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"weight_key_delete_btn",30,20)
+tde4.addScaleWidget(req,"tween_slider_wdgt","Tween","DOUBLE",-1.0,1.0,0.0)
+tde4.setWidgetOffsets(req,"tween_slider_wdgt",52,7,64,0)
+tde4.setWidgetAttachModes(req,"tween_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"tween_slider_wdgt",200,20)
 tde4.setWidgetLinks(req,"layers_list_wdgt","","","pgroup_name_wdgt","")
 tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
 tde4.setWidgetLinks(req,"pgroup_name_wdgt","curve_area_wdgt","","w006","")
@@ -308,6 +313,8 @@ tde4.setWidgetLinks(req,"create_key_btn","","update_viewport_btn","layers_list_w
 tde4.setWidgetLinks(req,"update_viewport_btn","","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 
 create_curve_set("masterLayer")
 create_curve_set("animLayer1")
