@@ -22,8 +22,10 @@ CURVE_COLORS = [(0.812,0.277,0.257),(0.441,0.816,0.354),(0.422,0.408,0.820),
                 (0.583,0.584,0.144)] 
 
 pg = tde4.getCurrentPGroup()
-pg_persistent_id = tde4.getPGroupPersistentID(pg)
 cam = tde4.getCurrentCamera()
+
+pg_pers_id = tde4.getPGroupPersistentID(pg)
+cam_pers_id = tde4.getCameraPersistentID(cam)
 
 def create_curve_set(layer_name): 
     pos_x_curve = tde4.createCurve()
@@ -316,30 +318,52 @@ tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wd
 tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 
-create_curve_set("masterLayer")
-create_curve_set("animLayer1")
+
+def load_data():
+    data_load = json.loads(tde4.getPersistentString(PERSISTENT_STRING_NAME))
+    return data_load
+
+def save_data(data_to_save):
+    data_save = json.dumps(data_to_save, sort_keys=True)
+    tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
+   
+
+def insert_base_anim_data(cam_pers_id, pg_pers_id):
+    get_data = load_data()
+    get_data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {}
+    get_data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = []
+    save_data(get_data)
+
+
+
+
+
+
+def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
+    get_data = load_data()
+
+    get_data[str(cam_pers_id)][str(pg_pers_id)].update({layer_name: {"position_x": {}, 
+                                                                "position_y": {},
+                                                                "position_z": {},
+                                                                "rotation_x": {},
+                                                                "rotation_y": {},
+                                                                "rotation_z": {},
+                                                                "weight": {1:1}}})
+
+    save_data(get_data)
+
 
 if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
-    data = { 1 : {"layer_name" : "masterLayer",
-                      "layer_index" : 0,
-                      "position_x" : {},
-                      "position_y" : {},
-                      "position_z" : {},
-                      "rotation_x" : {},
-                      "rotation_y" : {},
-                      "rotation_z" : {},
-                      "weight" : {},
-                     }
-            }
-    data = json.dumps(data, indent=2, sort_keys=True)
-    tde4.addPersistentString(PERSISTENT_STRING_NAME, data)
+    data = {cam_pers_id: {pg_pers_id: {}}}    
+    save_data(data)
+
+    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
+    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "AnimLayer1")
+
+    insert_base_anim_data(cam_pers_id, pg_pers_id)
 
 
-    # create curve set
 
-    # write_curve_keys
-
-    #
 
 
 
