@@ -60,9 +60,6 @@ def layer_item_clicked(req, widget, action):
             item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
             if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
                 curve = item_label.split("-")[1]
-                tde4.createCurveKey(curve, [1,20])
-                tde4.createCurveKey(curve, [140,1.0])
-                tde4.createCurveKey(curve, [170,0.5])
                 tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
                                     item_color[0],item_color[1],item_color[2],1)
 
@@ -102,18 +99,6 @@ def view_all_helper():
 
 def view_all_btn_clicked(req, widget, action):
     view_all_helper()
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 req = tde4.createCustomRequester()
@@ -328,13 +313,38 @@ def load_data():
 def save_data(data_to_save):
     data_save = json.dumps(data_to_save, sort_keys=True)
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
-   
+
+def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
+    data = load_data()
+    curve = tde4.getPGroupEditCurveGlobalSpace(pg, cam, edit_curve)
+    key_list = tde4.getCurveKeyList(curve, 0)
+    for key in key_list:
+        pos2d = tde4.getCurveKeyPosition(curve, key)
+        data[str(cam_pers_id)][str(pg_pers_id)][layer_name][axis].update(
+                                                      {int(pos2d[0]): pos2d[1]})
+    save_data(data)   
 
 def insert_base_anim_data(cam_pers_id, pg_pers_id):
     data = load_data()
     data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {"frames_count": frames}
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = ["BaseAnimation"]
-    save_data(data)
+
+    edit_curves_list = ["TX_CURVE", "TY_CURVE", "TZ_CURVE",
+                        "RX_CURVE", "RY_CURVE", "RZ_CURVE"]
+
+    axes = ["position_x", "position_y", "position_z",
+            "rotation_x", "rotation_y", "rotation_z"]
+
+    for count, edit_curve in enumerate(edit_curves_list):
+        insert_pg_editcurve_data(cam_pers_id, pg_pers_id, "BaseAnimation",
+                                           edit_curves_list[count], axes[count])
+
+
+
+    data = load_data()
+    print (data)
+
+
 
 
 
@@ -349,7 +359,6 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
                                                                 "rotation_y": {},
                                                                 "rotation_z": {},
                                                                 "weight": {1:1}}})
-
     save_data(data)
 
 
@@ -363,7 +372,6 @@ if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
 
     insert_base_anim_data(cam_pers_id, pg_pers_id)
 
-create_curve_set("BaseAnimation")
 
 #Callbacks
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_clicked")
