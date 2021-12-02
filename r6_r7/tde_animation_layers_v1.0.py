@@ -60,6 +60,9 @@ def layer_item_clicked(req, widget, action):
             item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
             if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
                 curve = item_label.split("-")[1]
+                tde4.createCurveKey(curve, [1,20])
+                tde4.createCurveKey(curve, [140,1.0])
+                tde4.createCurveKey(curve, [170,0.5])
                 tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
                                     item_color[0],item_color[1],item_color[2],1)
 
@@ -70,16 +73,13 @@ def get_curve_min_max_y_value(curve_list):
     key_data = []
     for curve in curve_list:
         key_list = tde4.getCurveKeyList(curve, 0)
-        if len(key_list) > 1:
+        if len(key_list) > 0:
             for key in key_list:
                 pos2d = tde4.getCurveKeyPosition(curve, key)
                 key_data.append(pos2d[1])
     if len(key_data) >= 1:
         min_max_values = [min(key_data), max(key_data)]
     return min_max_values
-
-
-
 
 
 def view_all_helper():
@@ -336,7 +336,7 @@ def insert_base_anim_data(cam_pers_id, pg_pers_id):
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = ["BaseAnimation"]
     save_data(data)
 
-    
+
 
 
 def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
@@ -363,7 +363,7 @@ if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
 
     insert_base_anim_data(cam_pers_id, pg_pers_id)
 
-
+create_curve_set("BaseAnimation")
 
 #Callbacks
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_clicked")
