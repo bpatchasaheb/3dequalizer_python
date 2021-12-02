@@ -314,7 +314,7 @@ def save_data(data_to_save):
     data_save = json.dumps(data_to_save, sort_keys=True)
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
 
-def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
+def insert_pg_editcurve_to_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
     data = load_data()
     curve = tde4.getPGroupEditCurveGlobalSpace(pg, cam, edit_curve)
     key_list = tde4.getCurveKeyList(curve, 0)
@@ -336,7 +336,7 @@ def insert_base_anim_data(cam_pers_id, pg_pers_id):
             "rotation_x", "rotation_y", "rotation_z"]
 
     for count, edit_curve in enumerate(edit_curves_list):
-        insert_pg_editcurve_data(cam_pers_id, pg_pers_id, "BaseAnimation",
+        insert_pg_editcurve_to_data(cam_pers_id, pg_pers_id, "BaseAnimation",
                                            edit_curves_list[count], axes[count])
 
 
