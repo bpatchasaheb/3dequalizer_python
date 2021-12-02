@@ -23,6 +23,7 @@ CURVE_COLORS = [(0.812,0.277,0.257),(0.441,0.816,0.354),(0.422,0.408,0.820),
 
 pg = tde4.getCurrentPGroup()
 cam = tde4.getCurrentCamera()
+frames = tde4.getCameraNoFrames(cam)
 
 pg_pers_id = tde4.getPGroupPersistentID(pg)
 cam_pers_id = tde4.getCameraPersistentID(cam)
@@ -319,6 +320,7 @@ tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 
 
+
 def load_data():
     data_load = json.loads(tde4.getPersistentString(PERSISTENT_STRING_NAME))
     return data_load
@@ -329,20 +331,18 @@ def save_data(data_to_save):
    
 
 def insert_base_anim_data(cam_pers_id, pg_pers_id):
-    get_data = load_data()
-    get_data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {}
-    get_data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = []
-    save_data(get_data)
+    data = load_data()
+    data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {"frames_count": frames}
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = ["BaseAnimation"]
+    save_data(data)
 
-
-
-
+    
 
 
 def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
-    get_data = load_data()
+    data = load_data()
 
-    get_data[str(cam_pers_id)][str(pg_pers_id)].update({layer_name: {"position_x": {}, 
+    data[str(cam_pers_id)][str(pg_pers_id)].update({layer_name: {"position_x": {}, 
                                                                 "position_y": {},
                                                                 "position_z": {},
                                                                 "rotation_x": {},
@@ -350,7 +350,7 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
                                                                 "rotation_z": {},
                                                                 "weight": {1:1}}})
 
-    save_data(get_data)
+    save_data(data)
 
 
 if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
@@ -360,10 +360,8 @@ if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "AnimLayer1")
 
+
     insert_base_anim_data(cam_pers_id, pg_pers_id)
-
-
-
 
 
 
