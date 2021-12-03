@@ -326,14 +326,15 @@ tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 
 
-
 def load_data():
     data_load = json.loads(tde4.getPersistentString(PERSISTENT_STRING_NAME))
     return data_load
 
+
 def save_data(data_to_save):
     data_save = json.dumps(data_to_save, sort_keys=True)
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
+
 
 def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
     data = load_data()
@@ -343,7 +344,8 @@ def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, ax
         pos2d = tde4.getCurveKeyPosition(curve, key)
         data[str(cam_pers_id)][str(pg_pers_id)][layer_name][axis].update(
                                                       {int(pos2d[0]): pos2d[1]})
-    save_data(data)   
+    save_data(data)  
+
 
 def insert_base_anim_data(cam_pers_id, pg_pers_id):
     data = load_data()
@@ -355,13 +357,8 @@ def insert_base_anim_data(cam_pers_id, pg_pers_id):
                                            EDIT_CURVES_LIST[count], AXES[count])
 
 
-
-
-
-
 def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
     data = load_data()
-
     data[str(cam_pers_id)][str(pg_pers_id)].update({layer_name: {"position_x": {}, 
                                                                 "position_y": {},
                                                                 "position_z": {},
@@ -372,17 +369,20 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
     save_data(data)
 
 
+def create_inital_data(cam_pers_id, pg_pers_id):
+    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
+    insert_base_anim_data(cam_pers_id, pg_pers_id)
+    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation") 
+
+
 if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
     data = {cam_pers_id: {pg_pers_id: {}}}    
     save_data(data)
+    create_inital_data(cam_pers_id, pg_pers_id)
+else:
+    data = load_data()
+    print data.keys()
 
-    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
-    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "AnimLayer1")
-
-
-    insert_base_anim_data(cam_pers_id, pg_pers_id)
-
-    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation")
 
 
 #Callbacks
