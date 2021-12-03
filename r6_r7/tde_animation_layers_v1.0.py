@@ -20,15 +20,20 @@ CURVE_NAMES = ["Pos X", "Pos Y", "Pos Z", "Rot X", "Rot Y", "Rot Z", "Weight"]
 CURVE_COLORS = [(0.812,0.277,0.257),(0.441,0.816,0.354),(0.422,0.408,0.820),
                 (0.453,0.815,0.809),(0.855,0.272,0.816),(0.819,0.812,0.387),
                 (0.583,0.584,0.144)] 
+EDIT_CURVES_LIST = ["TX_CURVE", "TY_CURVE", "TZ_CURVE",
+                    "RX_CURVE", "RY_CURVE", "RZ_CURVE"]
+AXES = ["position_x", "position_y", "position_z",
+        "rotation_x", "rotation_y", "rotation_z"]                
 
 pg = tde4.getCurrentPGroup()
 cam = tde4.getCurrentCamera()
 frames = tde4.getCameraNoFrames(cam)
 
-pg_pers_id = tde4.getPGroupPersistentID(pg)
 cam_pers_id = tde4.getCameraPersistentID(cam)
+pg_pers_id = tde4.getPGroupPersistentID(pg)
 
-def create_curve_set(layer_name): 
+def create_curve_set(cam_pers_id, pg_pers_id, layer_name): 
+    # Create curves, insert list widget items
     pos_x_curve = tde4.createCurve()
     pos_y_curve = tde4.createCurve()
     pos_z_curve = tde4.createCurve()
@@ -48,7 +53,23 @@ def create_curve_set(layer_name):
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", child_item,
                                 CURVE_COLORS[count][0], CURVE_COLORS[count][1],
                                 CURVE_COLORS[count][2])
-    return curve_ids
+    # Create curve keys
+    data = load_data()
+    for count, axis in enumerate(AXES):
+        axis_data = data[str(cam_pers_id)][str(pg_pers_id)][layer_name][axis]
+        extract_keys_from_data(curve_ids[count], axis_data)
+    # handle weight curve
+    axis_data = data[str(cam_pers_id)][str(pg_pers_id)][layer_name]["weight"]
+    extract_keys_from_data(weight_curve, axis_data)
+
+
+def extract_keys_from_data(curve, axis_data):
+    for frame in axis_data.keys():
+        x = float(frame)
+        y = float(axis_data[frame])
+        key = tde4.createCurveKey(curve, [x,y])
+        tde4.setCurveKeyMode(curve, key, "LINEAR")
+        tde4.setCurveKeyFixedXFlag(curve, key, 1)
 
 
 def layer_item_clicked(req, widget, action):
@@ -314,7 +335,7 @@ def save_data(data_to_save):
     data_save = json.dumps(data_to_save, sort_keys=True)
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
 
-def insert_pg_editcurve_to_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
+def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
     data = load_data()
     curve = tde4.getPGroupEditCurveGlobalSpace(pg, cam, edit_curve)
     key_list = tde4.getCurveKeyList(curve, 0)
@@ -329,20 +350,9 @@ def insert_base_anim_data(cam_pers_id, pg_pers_id):
     data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {"frames_count": frames}
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = ["BaseAnimation"]
 
-    edit_curves_list = ["TX_CURVE", "TY_CURVE", "TZ_CURVE",
-                        "RX_CURVE", "RY_CURVE", "RZ_CURVE"]
-
-    axes = ["position_x", "position_y", "position_z",
-            "rotation_x", "rotation_y", "rotation_z"]
-
-    for count, edit_curve in enumerate(edit_curves_list):
-        insert_pg_editcurve_to_data(cam_pers_id, pg_pers_id, "BaseAnimation",
-                                           edit_curves_list[count], axes[count])
-
-
-
-    data = load_data()
-    print (data)
+    for count, edit_curve in enumerate(EDIT_CURVES_LIST):
+        insert_pg_editcurve_data(cam_pers_id, pg_pers_id, "BaseAnimation",
+                                           EDIT_CURVES_LIST[count], AXES[count])
 
 
 
@@ -371,6 +381,8 @@ if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
 
 
     insert_base_anim_data(cam_pers_id, pg_pers_id)
+
+    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation")
 
 
 #Callbacks
