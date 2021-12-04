@@ -32,6 +32,22 @@ frames = tde4.getCameraNoFrames(cam)
 cam_pers_id = tde4.getCameraPersistentID(cam)
 pg_pers_id = tde4.getPGroupPersistentID(pg)
 
+def snap_edit_to_filtered_curves():
+    pg_type = tde4.getPGroupType(pg)
+    for frame in range(1, frames+1):
+        pos = tde4.getPGroupPosition3D(pg, cam, frame)
+        rot = tde4.getPGroupRotation3D(pg, cam, frame)
+        scale = tde4.getPGroupScale3D(pg)
+        if pg_type == "OBJECT":
+            rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, frame, rot, pos, scale, 1)
+        tde4.setPGroupPosition3D(pg, cam, frame, pos)
+        tde4.setPGroupRotation3D(pg, cam, frame, rot)
+    tde4.setPGroupScale3D(pg, scale)
+    postfilter_mode  = tde4.getPGroupPostfilterMode(pg)
+    tde4.setPGroupPostfilterMode(pg,"POSTFILTER_OFF")
+    tde4.filterPGroup(pg, cam)
+    tde4.setPGroupPostfilterMode(pg, postfilter_mode)
+
 def create_curve_set(cam_pers_id, pg_pers_id, layer_name): 
     # Create curves, insert list widget items
     pos_x_curve = tde4.createCurve()
@@ -56,10 +72,10 @@ def create_curve_set(cam_pers_id, pg_pers_id, layer_name):
     # Create curve keys
     data = load_data()
     for count, axis in enumerate(AXES):
-        axis_data = data[str(cam_pers_id)][str(pg_pers_id)][layer_name][axis]
+        axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name][axis]
         extract_keys_from_data(curve_ids[count], axis_data)
     # handle weight curve
-    axis_data = data[str(cam_pers_id)][str(pg_pers_id)][layer_name]["weight"]
+    axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["weight"]
     extract_keys_from_data(weight_curve, axis_data)
 
 
@@ -96,7 +112,7 @@ def get_curve_min_max_y_value(curve_list):
                 pos2d = tde4.getCurveKeyPosition(curve, key)
                 key_data.append(pos2d[1])
     if len(key_data) >= 1:
-        min_max_values = [min(key_data), max(key_data)]
+        min_max_values = [round(min(key_data), 4), round(max(key_data), 4)]
     return min_max_values
 
 
@@ -111,7 +127,7 @@ def view_all_helper():
                 dmax = dmax * 2 
         else:
             dmin = -0.5
-            dmax = 0.5         
+            dmax = 0.5 
         tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
                          frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
         tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
@@ -342,16 +358,13 @@ def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, ax
     key_list = tde4.getCurveKeyList(curve, 0)
     for key in key_list:
         pos2d = tde4.getCurveKeyPosition(curve, key)
-        data[str(cam_pers_id)][str(pg_pers_id)][layer_name][axis].update(
-                                                      {int(pos2d[0]): pos2d[1]})
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name][axis].update(
+                                                         {int(pos2d[0]): pos2d[1]})
     save_data(data)  
 
 
 def insert_base_anim_data(cam_pers_id, pg_pers_id):
     data = load_data()
-    data[str(cam_pers_id)][str(pg_pers_id)]["bake"] = {"frames_count": frames}
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = ["BaseAnimation"]
-
     for count, edit_curve in enumerate(EDIT_CURVES_LIST):
         insert_pg_editcurve_data(cam_pers_id, pg_pers_id, "BaseAnimation",
                                            EDIT_CURVES_LIST[count], AXES[count])
@@ -359,7 +372,7 @@ def insert_base_anim_data(cam_pers_id, pg_pers_id):
 
 def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
     data = load_data()
-    data[str(cam_pers_id)][str(pg_pers_id)].update({layer_name: {"position_x": {}, 
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers"].update({layer_name: {"position_x": {}, 
                                                                 "position_y": {},
                                                                 "position_z": {},
                                                                 "rotation_x": {},
@@ -369,20 +382,53 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
     save_data(data)
 
 
-def create_inital_data(cam_pers_id, pg_pers_id):
+def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
+    data = load_data()
+    if for_cam == True:
+        data.update({str(cam_pers_id): {str(pg_pers_id): {"layers": {},
+                                                "bake": {},
+                                                "frames_count": frames,
+                                                "layers_order": ["BaseAnimation"]}}})
+    if for_pg == True:
+        data[str(cam_pers_id)].update({str(pg_pers_id): {"layers": {},
+                                                "bake": {},
+                                                "frames_count": frames,
+                                                "layers_order": ["BaseAnimation"]}})        
+
+
+
+    save_data(data)
+
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
     insert_base_anim_data(cam_pers_id, pg_pers_id)
-    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation") 
 
+    
+# Bake post filtered buffer curves
+snap_edit_to_filtered_curves()
 
+# Handle persistent string
+# If persistent string is None
 if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
-    data = {cam_pers_id: {pg_pers_id: {}}}    
+    data = {}
     save_data(data)
-    create_inital_data(cam_pers_id, pg_pers_id)
+    insert_inital_data(cam_pers_id, pg_pers_id, True, False)
 else:
+    # If cam_pers_id does not exist
     data = load_data()
-    print data.keys()
+    if not str(cam_pers_id) in data.keys():
+        insert_inital_data(cam_pers_id, pg_pers_id, True, False)
 
+    # If pg_pers_id does not exist
+    data = load_data()
+    if not str(pg_pers_id) in data[str(cam_pers_id)].keys():
+        insert_inital_data(cam_pers_id, pg_pers_id, False, True)
+
+# Create curve set
+# TODO: check frame count and bake data before creating curves
+data = load_data()
+layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
+for layer_name in layers_order:
+    create_curve_set(cam_pers_id, pg_pers_id, layer_name) 
 
 
 #Callbacks
