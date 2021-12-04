@@ -48,7 +48,7 @@ def snap_edit_to_filtered_btn_clicked(req, widget, action):
 			rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, frame, rot, pos, scale, 1)
 		tde4.setPGroupPosition3D(pg, cam, frame, pos)
 		tde4.setPGroupRotation3D(pg, cam, frame, rot)
-		tde4.setPGroupScale3D(pg, scale)
+	tde4.setPGroupScale3D(pg, scale)
 	postfilter_mode  = tde4.getPGroupPostfilterMode(pg)
 	tde4.setPGroupPostfilterMode(pg,"POSTFILTER_OFF")
 	tde4.filterPGroup(pg, cam)
