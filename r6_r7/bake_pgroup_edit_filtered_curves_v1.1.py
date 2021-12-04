@@ -1,4 +1,4 @@
-# 3DE4.script.name: Bake PGroup edit/filtered curves
+# 3DE4.script.name: Bake PGroup Edit/Filtered Curves
 # 3DE4.script.version: v1.1
 # 3DE4.script.gui:Curve Editor::Edit
 # 3DE4.script.comment: Bakes Edit curves to Filtered curves vice versa.
@@ -7,7 +7,7 @@
 # August 01 2021, Montreal
 # December 4 2021, Montreal
 
-WINDOW_TITLE = "Bake PGroup edit/filtered curves v1.1"
+WINDOW_TITLE = "Bake PGroup Edit/Filtered Curves v1.1"
 
 def calc_range_toggle_rdo_btn_clicked(req, widget, action):
 	if tde4.getWidgetValue(req, "calc_range_rdo_btn") == 1:
@@ -57,11 +57,11 @@ def snap_edit_to_filtered_btn_clicked(req, widget, action):
 
 # GUI
 req = tde4.createCustomRequester()
-tde4.addLabelWidget(req,"edit_curves_label","Edit curves:   Actual curves with visible keys","ALIGN_LABEL_CENTER")
+tde4.addLabelWidget(req,"edit_curves_label","Edit Curves:   Actual curves with visible keys","ALIGN_LABEL_CENTER")
 tde4.setWidgetOffsets(req,"edit_curves_label",5,95,10,0)
 tde4.setWidgetAttachModes(req,"edit_curves_label","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"edit_curves_label",200,20)
-tde4.addLabelWidget(req,"filtered_curves_label","Filtered curves:   Smooth curves with no visible keys","ALIGN_LABEL_CENTER")
+tde4.addLabelWidget(req,"filtered_curves_label","Filtered Curves:   Smooth curves with no visible keys","ALIGN_LABEL_CENTER")
 tde4.setWidgetOffsets(req,"filtered_curves_label",7,95,10,0)
 tde4.setWidgetAttachModes(req,"filtered_curves_label","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"filtered_curves_label",200,20)
@@ -73,11 +73,11 @@ tde4.addToggleWidget(req,"full_range_rdo_btn","Full Frame Range",0)
 tde4.setWidgetOffsets(req,"full_range_rdo_btn",360,0,15,0)
 tde4.setWidgetAttachModes(req,"full_range_rdo_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"full_range_rdo_btn",20,20)
-tde4.addButtonWidget(req,"snap_edit_to_filtered_btn","Snap Edit curves to Filtered curves")
+tde4.addButtonWidget(req,"snap_edit_to_filtered_btn","Snap Edit Curves to Filtered Curves")
 tde4.setWidgetOffsets(req,"snap_edit_to_filtered_btn",15,85,20,0)
 tde4.setWidgetAttachModes(req,"snap_edit_to_filtered_btn","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"snap_edit_to_filtered_btn",80,20)
-tde4.addButtonWidget(req,"snap_filtered_to_edit_btn","Snap Filtered curves to Edit curves")
+tde4.addButtonWidget(req,"snap_filtered_to_edit_btn","Snap Filtered Curves to Edit Curves")
 tde4.setWidgetOffsets(req,"snap_filtered_to_edit_btn",15,85,20,0)
 tde4.setWidgetAttachModes(req,"snap_filtered_to_edit_btn","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"snap_filtered_to_edit_btn",80,20)
