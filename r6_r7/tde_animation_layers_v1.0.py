@@ -39,7 +39,8 @@ def snap_edit_to_filtered_curves():
         rot = tde4.getPGroupRotation3D(pg, cam, frame)
         scale = tde4.getPGroupScale3D(pg)
         if pg_type == "OBJECT":
-            rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, frame, rot, pos, scale, 1)
+            rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, 
+                                                      frame, rot, pos, scale, 1)
         tde4.setPGroupPosition3D(pg, cam, frame, pos)
         tde4.setPGroupRotation3D(pg, cam, frame, rot)
     tde4.setPGroupScale3D(pg, scale)
@@ -381,33 +382,63 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
                                                                 "weight": {1:1}}})
     save_data(data)
 
+def convert_to_angles(r3d):
+    rot	= rot3d(mat3d(r3d)).angles(VL_APPLY_ZXY)
+    rx	= (rot[0]*180.0)/3.141592654
+    ry	= (rot[1]*180.0)/3.141592654
+    rz	= (rot[2]*180.0)/3.141592654
+    rx = round(rx, 4)
+    ry = round(ry, 4)
+    rz = round(rz, 4)
+    return[rx,ry,rz]
+
+def insert_pg_bake_data(pg):
+    bake_data = {"position": {}, "rotation": {}}
+    for frame in range(1, frames+1):
+        pos_3d = tde4.getPGroupPosition3D(pg, cam,frame)
+        rot_3d = tde4.getPGroupRotation3D(pg,cam,frame)
+        rot_3d = convert_to_angles(rot_3d)
+        bake_data["position"][frame] = pos_3d
+        bake_data["rotation"][frame] = rot_3d
+    return bake_data
+    
+
+def is_pg_animation_changed(cam_pers_id, pg_pers_id, pg):
+    status = False
+    data = load_data()
+    pos_3d_data = data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["position"]
+    rot_3d_data = data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["rotation"]
+    for frame in pos_3d_data.keys():
+        pos_3d = tde4.getPGroupPosition3D(pg, cam, int(frame))
+        rot_3d = tde4.getPGroupRotation3D(pg, cam, int(frame))
+        rot_3d = convert_to_angles(rot_3d)
+        if (not pos_3d_data[str(frame)] == pos_3d) or (not rot_3d_data[str(frame)] == rot_3d):
+            status = True
+            break
+    return status
+
 
 def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
     data = load_data()
     if for_cam == True:
         data.update({str(cam_pers_id): {str(pg_pers_id): {"layers": {},
-                                                "bake": {},
+                                                "bake": insert_pg_bake_data(pg),
                                                 "frames_count": frames,
                                                 "layers_order": ["BaseAnimation"]}}})
     if for_pg == True:
         data[str(cam_pers_id)].update({str(pg_pers_id): {"layers": {},
-                                                "bake": {},
+                                                "bake": insert_pg_bake_data(pg),
                                                 "frames_count": frames,
-                                                "layers_order": ["BaseAnimation"]}})        
-
-
-
+                                                "layers_order": ["BaseAnimation"]}})       
     save_data(data)
-
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
     insert_base_anim_data(cam_pers_id, pg_pers_id)
 
-    
+
 # Bake post filtered buffer curves
 snap_edit_to_filtered_curves()
 
 # Handle persistent string
-# If persistent string is None
 if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
     data = {}
     save_data(data)
@@ -424,11 +455,19 @@ else:
         insert_inital_data(cam_pers_id, pg_pers_id, False, True)
 
 # Create curve set
-# TODO: check frame count and bake data before creating curves
+# Check frame count and bake data before creating curves
 data = load_data()
-layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
-for layer_name in layers_order:
-    create_curve_set(cam_pers_id, pg_pers_id, layer_name) 
+is_frame_count_changed = False
+if not int(data[str(cam_pers_id)][str(pg_pers_id)]["frames_count"]) == frames:
+    is_frame_count_changed = True
+
+if is_frame_count_changed == False and is_pg_animation_changed(cam_pers_id, pg_pers_id, pg) == False:
+    layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
+    for layer_name in layers_order:
+        create_curve_set(cam_pers_id, pg_pers_id, layer_name)
+else:
+    insert_inital_data(cam_pers_id, pg_pers_id, True, False)
+    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation")
 
 
 #Callbacks
