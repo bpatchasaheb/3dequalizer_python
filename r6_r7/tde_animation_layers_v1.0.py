@@ -23,7 +23,9 @@ CURVE_COLORS = [(0.812,0.277,0.257),(0.441,0.816,0.354),(0.422,0.408,0.820),
 EDIT_CURVES_LIST = ["TX_CURVE", "TY_CURVE", "TZ_CURVE",
                     "RX_CURVE", "RY_CURVE", "RZ_CURVE"]
 AXES = ["position_x", "position_y", "position_z",
-        "rotation_x", "rotation_y", "rotation_z"]                
+        "rotation_x", "rotation_y", "rotation_z"] 
+ACTIVE_LAYER_COLOR = [0.0, 1.0, 0.0]
+DEFAULT_LAYER_COLOR = [1.0, 1.0, 0.95]
 
 pg = tde4.getCurrentPGroup()
 cam = tde4.getCurrentCamera()
@@ -33,137 +35,6 @@ frame_offset = tde4.getCameraFrameOffset(cam)
 
 cam_pers_id = tde4.getCameraPersistentID(cam)
 pg_pers_id = tde4.getPGroupPersistentID(pg)
-
-# def cursor_update(req):
-# 	cam	= tde4.getCurrentCamera()
-# 	f	= tde4.getCurrentFrame(cam)
-# 	tde4.setCurveAreaWidgetCursorPosition(req, "curve_area_wdgt",f)
-# 	offset	= tde4.getCameraFrameOffset(cam)
-# 	tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt",offset-1)
-# 	return
-
-def cursor_update(req):
-    cam = tde4.getCurrentCamera()
-    frame = tde4.getCurrentFrame(cam)
-    tde4.setCurveAreaWidgetCursorPosition(req, "curve_area_wdgt", frame, 1)
-
-
-def curve_area_callback(req, widget, action):
-    if action==3 or action==2:
-        f = tde4.getCurveAreaWidgetCursorPosition(req, "curve_area_wdgt")
-        n = tde4.getCameraNoFrames(cam)
-        if f < 1: f = 1
-        if f > n: f = 1
-        tde4.setCurrentFrame(cam, int(f))
-
-
-def snap_edit_to_filtered_curves():
-    pg_type = tde4.getPGroupType(pg)
-    for frame in range(1, frames+1):
-        pos = tde4.getPGroupPosition3D(pg, cam, frame)
-        rot = tde4.getPGroupRotation3D(pg, cam, frame)
-        scale = tde4.getPGroupScale3D(pg)
-        if pg_type == "OBJECT":
-            rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, 
-                                                      frame, rot, pos, scale, 1)
-        tde4.setPGroupPosition3D(pg, cam, frame, pos)
-        tde4.setPGroupRotation3D(pg, cam, frame, rot)
-    tde4.setPGroupScale3D(pg, scale)
-    postfilter_mode  = tde4.getPGroupPostfilterMode(pg)
-    tde4.setPGroupPostfilterMode(pg,"POSTFILTER_OFF")
-    tde4.filterPGroup(pg, cam)
-    tde4.setPGroupPostfilterMode(pg, postfilter_mode)
-
-def create_curve_set(cam_pers_id, pg_pers_id, layer_name): 
-    # Create curves, insert list widget items
-    pos_x_curve = tde4.createCurve()
-    pos_y_curve = tde4.createCurve()
-    pos_z_curve = tde4.createCurve()
-    rot_x_curve = tde4.createCurve()
-    rot_y_curve = tde4.createCurve()
-    rot_z_curve = tde4.createCurve()    
-    weight_curve = tde4.createCurve()
-    curve_ids = [pos_x_curve, pos_y_curve, pos_z_curve,
-                 rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
-    parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
-                                            0, "LIST_ITEM_NODE")
-    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 0)
-    for count, curve_id in enumerate(curve_ids):
-        item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
-        child_item = tde4.insertListWidgetItem(req, "layers_list_wdgt",
-                                   item_name, 1, "LIST_ITEM_ATOM", parent_item)
-        tde4.setListWidgetItemColor(req, "layers_list_wdgt", child_item,
-                                CURVE_COLORS[count][0], CURVE_COLORS[count][1],
-                                CURVE_COLORS[count][2])
-    # Create curve keys
-    data = load_data()
-    for count, axis in enumerate(AXES):
-        axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name][axis]
-        extract_keys_from_data(curve_ids[count], axis_data)
-    # handle weight curve
-    axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["weight"]
-    extract_keys_from_data(weight_curve, axis_data)
-
-
-def extract_keys_from_data(curve, axis_data):
-    for frame in axis_data.keys():
-        x = float(frame)
-        y = float(axis_data[frame])
-        key = tde4.createCurveKey(curve, [x,y])
-        tde4.setCurveKeyMode(curve, key, "LINEAR")
-        tde4.setCurveKeyFixedXFlag(curve, key, 1)
-
-
-def layer_item_callback(req, widget, action):
-    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
-    if len(sel_items) > 0:
-        tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
-        for item in sel_items:
-            item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
-            item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
-            if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
-                curve = item_label.split("-")[1]
-                tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
-                                    item_color[0],item_color[1],item_color[2],1)
-        if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
-            view_all_helper()      
-
-
-def get_curve_min_max_y_value(curve_list):
-    min_max_values = [None, None]    
-    key_data = []
-    for curve in curve_list:
-        key_list = tde4.getCurveKeyList(curve, 0)
-        if len(key_list) > 0:
-            for key in key_list:
-                pos2d = tde4.getCurveKeyPosition(curve, key)
-                key_data.append(pos2d[1])
-    if len(key_data) >= 1:
-        min_max_values = [round(min(key_data), 4), round(max(key_data), 4)]
-    return min_max_values
-
-
-def view_all_helper():
-    curve_list = tde4.getCurveAreaWidgetCurveList(req, "curve_area_wdgt")
-    for curve in curve_list:
-        frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
-        dmin = get_curve_min_max_y_value(curve_list)[0]
-        dmax = get_curve_min_max_y_value(curve_list)[1]         
-        if dmin and dmax:        
-            if dmin == dmax:
-                dmax = dmax * 2 
-        else:
-            dmin = -0.5
-            dmax = 0.5 
-        tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
-                         frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
-        tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
-                    frames*1.05,dmin-((dmax-dmin)*0.10),dmax+((dmax-dmin)*0.10))
-
-
-def view_all_btn_callback(req, widget, action):
-    view_all_helper()
-
 
 req = tde4.createCustomRequester()
 
@@ -284,7 +155,7 @@ tde4.addMenuToggleWidget(req,"update_objpg_menu_btn","Update ObjectPG along with
 tde4.setWidgetOffsets(req,"update_objpg_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"update_objpg_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"update_objpg_menu_btn",80,20)
-tde4.addToggleWidget(req,"auto_view_all_toggle_btn","Auto View All",0)
+tde4.addToggleWidget(req,"auto_view_all_toggle_btn","Auto View All",1)
 tde4.setWidgetOffsets(req,"auto_view_all_toggle_btn",0,10,5,0)
 tde4.setWidgetAttachModes(req,"auto_view_all_toggle_btn","ATTACH_NONE","ATTACH_WIDGET","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"auto_view_all_toggle_btn",20,20)
@@ -347,6 +218,159 @@ def save_data(data_to_save):
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
 
 
+def cursor_update(req):
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    tde4.setCurveAreaWidgetCursorPosition(req, "curve_area_wdgt", frame, 1)
+
+
+def curve_area_callback(req, widget, action):
+    if action==3 or action==2:
+        f = tde4.getCurveAreaWidgetCursorPosition(req, "curve_area_wdgt")
+        n = tde4.getCameraNoFrames(cam)
+        if f < 1: f = 1
+        if f > n: f = 1
+        tde4.setCurrentFrame(cam, int(f))
+
+
+def snap_edit_to_filtered_curves():
+    pg_type = tde4.getPGroupType(pg)
+    for frame in range(1, frames+1):
+        pos = tde4.getPGroupPosition3D(pg, cam, frame)
+        rot = tde4.getPGroupRotation3D(pg, cam, frame)
+        scale = tde4.getPGroupScale3D(pg)
+        if pg_type == "OBJECT":
+            rot, pos = tde4.convertObjectPGroupTransformationWorldTo3DE(cam, 
+                                                      frame, rot, pos, scale, 1)
+        tde4.setPGroupPosition3D(pg, cam, frame, pos)
+        tde4.setPGroupRotation3D(pg, cam, frame, rot)
+    tde4.setPGroupScale3D(pg, scale)
+    postfilter_mode  = tde4.getPGroupPostfilterMode(pg)
+    tde4.setPGroupPostfilterMode(pg,"POSTFILTER_OFF")
+    tde4.filterPGroup(pg, cam)
+    tde4.setPGroupPostfilterMode(pg, postfilter_mode)
+
+
+def extract_keys_from_data(curve, axis_data):
+    for frame in axis_data.keys():
+        x = float(frame)
+        y = float(axis_data[frame])
+        key = tde4.createCurveKey(curve, [x,y])
+        tde4.setCurveKeyMode(curve, key, "LINEAR")
+        tde4.setCurveKeyFixedXFlag(curve, key, 1)
+
+
+def create_curve_set(cam_pers_id, pg_pers_id, layer_name): 
+    # Create curves, insert list widget items
+    pos_x_curve = tde4.createCurve()
+    pos_y_curve = tde4.createCurve()
+    pos_z_curve = tde4.createCurve()
+    rot_x_curve = tde4.createCurve()
+    rot_y_curve = tde4.createCurve()
+    rot_z_curve = tde4.createCurve()    
+    weight_curve = tde4.createCurve()
+    curve_ids = [pos_x_curve, pos_y_curve, pos_z_curve,
+                 rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
+    parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
+                                            0, "LIST_ITEM_NODE")
+    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 0)
+    for count, curve_id in enumerate(curve_ids):
+        item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
+        child_item = tde4.insertListWidgetItem(req, "layers_list_wdgt",
+                                   item_name, 1, "LIST_ITEM_ATOM", parent_item)
+        tde4.setListWidgetItemColor(req, "layers_list_wdgt", child_item,
+                                CURVE_COLORS[count][0], CURVE_COLORS[count][1],
+                                CURVE_COLORS[count][2])
+    # Create curve keys
+    data = load_data()
+    for count, axis in enumerate(AXES):
+        axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name][axis]
+        extract_keys_from_data(curve_ids[count], axis_data)
+    # handle weight curve
+    axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["weight"]
+    extract_keys_from_data(weight_curve, axis_data)
+
+
+def get_all_parent_items():
+    parent_nodes = []
+    items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
+    for item in range(items):
+        if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_NODE":
+            parent_nodes.append(item)
+    return parent_nodes
+
+
+def set_active_layer():
+    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
+    if len(sel_items) > 0:
+        # Set default layer color for all parent nodes
+        for parent_item in get_all_parent_items():
+            tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent_item,
+         DEFAULT_LAYER_COLOR[0], DEFAULT_LAYER_COLOR[1], DEFAULT_LAYER_COLOR[2])
+        # Set active layer color 
+        for item in sel_items:
+            parent = item
+            if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
+                parent = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
+            tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent, 0.0, 1.0, 0.0)
+            break
+
+
+
+def layer_item_callback(req, widget, action):
+    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
+    if len(sel_items) > 0:
+        tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
+        for item in sel_items:
+            item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
+            item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
+            if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
+                curve = item_label.split("-")[1]
+                tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
+                                   item_color[0],item_color[1],item_color[2],1)
+        # Set active layer
+        set_active_layer()
+        # Auto view all
+        if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
+            view_all_helper()      
+
+
+def get_curve_min_max_y_value(curve_list):
+    min_max_values = [None, None]    
+    key_data = []
+    for curve in curve_list:
+        key_list = tde4.getCurveKeyList(curve, 0)
+        if len(key_list) > 0:
+            for key in key_list:
+                pos2d = tde4.getCurveKeyPosition(curve, key)
+                key_data.append(pos2d[1])
+    if len(key_data) >= 1:
+        min_max_values = [round(min(key_data), 4), round(max(key_data), 4)]
+    return min_max_values
+
+
+def view_all_helper():
+    curve_list = tde4.getCurveAreaWidgetCurveList(req, "curve_area_wdgt")
+    for curve in curve_list:
+        frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
+        dmin = get_curve_min_max_y_value(curve_list)[0]
+        dmax = get_curve_min_max_y_value(curve_list)[1]         
+        if dmin and dmax:        
+            if dmin == dmax:
+                dmax = dmax * 2 
+        else:
+            dmin = -0.5
+            dmax = 0.5 
+        tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
+                         frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
+        tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
+                    frames*1.05,dmin-((dmax-dmin)*0.10),dmax+((dmax-dmin)*0.10))
+
+
+def view_all_btn_callback(req, widget, action):
+    view_all_helper()
+
+
 def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
     data = load_data()
     curve = tde4.getPGroupEditCurveGlobalSpace(pg, cam, edit_curve)
@@ -374,6 +398,7 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
                                                                 "rotation_y": {},
                                                                 "rotation_z": {},
                                                                 "weight": {1:1}}})
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"].append(layer_name)
     save_data(data)
 
 def convert_to_angles(r3d):
@@ -418,15 +443,28 @@ def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
         data.update({str(cam_pers_id): {str(pg_pers_id): {"layers": {},
                                                 "bake": insert_pg_bake_data(pg),
                                                 "frames_count": frames,
-                                                "layers_order": ["BaseAnimation"]}}})
+                                                "layers_order": []}}})
     if for_pg == True:
         data[str(cam_pers_id)].update({str(pg_pers_id): {"layers": {},
                                                 "bake": insert_pg_bake_data(pg),
                                                 "frames_count": frames,
-                                                "layers_order": ["BaseAnimation"]}})       
+                                                "layers_order": []}})       
     save_data(data)
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
     insert_base_anim_data(cam_pers_id, pg_pers_id)
+
+
+def create_empty_layer_callback(req, widget, action):
+    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "AnimLayer1")
+    create_curve_set(cam_pers_id, pg_pers_id, "AnimLayer1")
+
+  
+
+
+def test(req, widget, action):
+    data = load_data()
+    print data[str(cam_pers_id)][str(pg_pers_id)]["layers"].keys()
+
 
 
 # Bake post filtered buffer curves
@@ -468,6 +506,13 @@ else:
 tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
+tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
+
+
+
+tde4.setWidgetCallbackFunction(req, "update_viewport_btn", "test")
+
+
 
 
 tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
