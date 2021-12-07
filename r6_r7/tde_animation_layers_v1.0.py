@@ -26,6 +26,7 @@ AXES = ["position_x", "position_y", "position_z",
         "rotation_x", "rotation_y", "rotation_z"] 
 ACTIVE_LAYER_COLOR = [0.0, 1.0, 0.0]
 DEFAULT_LAYER_COLOR = [1.0, 1.0, 0.95]
+NEW_LAYER_NAME = "AnimLayer"
 
 pg = tde4.getCurrentPGroup()
 cam = tde4.getCurrentCamera()
@@ -303,7 +304,7 @@ def get_all_parent_items():
 def set_active_layer():
     sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
     if len(sel_items) > 0:
-        # Set default layer color for all parent nodes
+        # Set default layer color for all parent nodes first
         for parent_item in get_all_parent_items():
             tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent_item,
          DEFAULT_LAYER_COLOR[0], DEFAULT_LAYER_COLOR[1], DEFAULT_LAYER_COLOR[2])
@@ -312,9 +313,9 @@ def set_active_layer():
             parent = item
             if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
                 parent = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
-            tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent, 0.0, 1.0, 0.0)
+            tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent,
+             ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
             break
-
 
 
 def layer_item_callback(req, widget, action):
@@ -454,9 +455,22 @@ def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
     insert_base_anim_data(cam_pers_id, pg_pers_id)
 
 
+def get_animlayer_next_number():
+    nums = [0]
+    for parent_item in get_all_parent_items():
+        label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", parent_item)
+        if NEW_LAYER_NAME in label:
+            label = label.replace(NEW_LAYER_NAME, "")
+            nums.append(int(label))
+    return max(nums)+1
+
+
 def create_empty_layer_callback(req, widget, action):
-    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "AnimLayer1")
-    create_curve_set(cam_pers_id, pg_pers_id, "AnimLayer1")
+    layer_name = NEW_LAYER_NAME + str(get_animlayer_next_number())
+    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), layer_name)
+    create_curve_set(cam_pers_id, pg_pers_id, layer_name)
+
+
 
   
 
