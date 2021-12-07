@@ -27,10 +27,35 @@ AXES = ["position_x", "position_y", "position_z",
 
 pg = tde4.getCurrentPGroup()
 cam = tde4.getCurrentCamera()
+current_frame = tde4.getCurrentFrame(cam)
 frames = tde4.getCameraNoFrames(cam)
+frame_offset = tde4.getCameraFrameOffset(cam)
 
 cam_pers_id = tde4.getCameraPersistentID(cam)
 pg_pers_id = tde4.getPGroupPersistentID(pg)
+
+# def cursor_update(req):
+# 	cam	= tde4.getCurrentCamera()
+# 	f	= tde4.getCurrentFrame(cam)
+# 	tde4.setCurveAreaWidgetCursorPosition(req, "curve_area_wdgt",f)
+# 	offset	= tde4.getCameraFrameOffset(cam)
+# 	tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt",offset-1)
+# 	return
+
+def cursor_update(req):
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    tde4.setCurveAreaWidgetCursorPosition(req, "curve_area_wdgt", frame, 1)
+
+
+def curve_area_callback(req, widget, action):
+    if action==3 or action==2:
+        f = tde4.getCurveAreaWidgetCursorPosition(req, "curve_area_wdgt")
+        n = tde4.getCameraNoFrames(cam)
+        if f < 1: f = 1
+        if f > n: f = 1
+        tde4.setCurrentFrame(cam, int(f))
+
 
 def snap_edit_to_filtered_curves():
     pg_type = tde4.getPGroupType(pg)
@@ -100,7 +125,7 @@ def layer_item_clicked(req, widget, action):
                 curve = item_label.split("-")[1]
                 tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
                                     item_color[0],item_color[1],item_color[2],1)
-
+        
 
 
 def get_curve_min_max_y_value(curve_list):
@@ -308,6 +333,8 @@ tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
 
+tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt", frame_offset-1)
+
 
 def load_data():
     data_load = json.loads(tde4.getPersistentString(PERSISTENT_STRING_NAME))
@@ -437,9 +464,13 @@ else:
 
 
 #Callbacks
+tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_clicked")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_clicked")
 
 
-tde4.postCustomRequesterAndContinue(req,WINDOW_TITLE,1000,700)
+tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
+tde4.updateGUI()
+tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
+tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 
