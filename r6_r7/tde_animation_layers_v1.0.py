@@ -114,7 +114,7 @@ def extract_keys_from_data(curve, axis_data):
         tde4.setCurveKeyFixedXFlag(curve, key, 1)
 
 
-def layer_item_clicked(req, widget, action):
+def layer_item_callback(req, widget, action):
     sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
     if len(sel_items) > 0:
         tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
@@ -125,7 +125,8 @@ def layer_item_clicked(req, widget, action):
                 curve = item_label.split("-")[1]
                 tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
                                     item_color[0],item_color[1],item_color[2],1)
-        
+        if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
+            view_all_helper()      
 
 
 def get_curve_min_max_y_value(curve_list):
@@ -160,7 +161,7 @@ def view_all_helper():
                     frames*1.05,dmin-((dmax-dmin)*0.10),dmax+((dmax-dmin)*0.10))
 
 
-def view_all_btn_clicked(req, widget, action):
+def view_all_btn_callback(req, widget, action):
     view_all_helper()
 
 
@@ -465,8 +466,8 @@ else:
 
 #Callbacks
 tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
-tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_clicked")
-tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_clicked")
+tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
+tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 
 
 tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
