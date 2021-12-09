@@ -503,7 +503,8 @@ def get_animlayer_increment_number():
     for label in item_labels:
         if NEW_LAYER_NAME in label:
             label = label.replace(NEW_LAYER_NAME, "")
-            nums.append(int(label))
+            if label.isdigit():
+                nums.append(int(label))
     return max(nums)+1
 
 
@@ -555,6 +556,13 @@ def update_layers_order_data(cam_pers_id, pg_pers_id, order_list):
     save_data(data) 
 
 
+def update_active_layer_data(cam_pers_id, pg_pers_id, old_name, new_name):
+    data = load_data()
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers"][new_name] = (data[str(cam_pers_id)][str(pg_pers_id)]["layers"]).pop(old_name)
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = str(new_name)
+    save_data(data)
+
+
 def create_empty_layer_callback(req, widget, action):
     layer_name = NEW_LAYER_NAME + str(get_animlayer_increment_number())
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), layer_name)
@@ -573,7 +581,7 @@ def rename_layer_callback(req, widget, action):
         tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, No active layer found to rename.", "Ok")
         return
     rename_req = tde4.createCustomRequester()
-    tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name")
+    tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name", str(active_layer))
     tde4.setWidgetOffsets(rename_req,"layer_rename_wdgt",60,10,5,0)
     tde4.setWidgetAttachModes(rename_req,"layer_rename_wdgt","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
     tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20) 
@@ -586,13 +594,9 @@ def rename_layer_callback(req, widget, action):
             return
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
-        # update layers data
-        data = load_data()
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers"][new_name] = (data[str(cam_pers_id)][str(pg_pers_id)]["layers"]).pop(active_layer)
-        # update active layer status
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = str(new_name)
-        save_data(data)
-        # update layers order data
+        # Update active layer data
+        update_active_layer_data(cam_pers_id, pg_pers_id, active_layer, new_name)
+        # Update layers order data
         update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels())              
 
 
