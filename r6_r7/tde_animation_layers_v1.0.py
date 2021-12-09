@@ -276,7 +276,7 @@ def create_curve_set(cam_pers_id, pg_pers_id, layer_name):
                  rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
     parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
                                             0, "LIST_ITEM_NODE")                                            
-    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 1)
+    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 0)
     for count, curve_id in enumerate(curve_ids):
         item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
         child_item = tde4.insertListWidgetItem(req, "layers_list_wdgt",
@@ -450,14 +450,34 @@ def get_parent_item_by_label(label):
     return item
 
 
-def set_active_layer():
-    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
+def set_layer_colors(cam_pers_id, pg_pers_id):
+    data = load_data()
     # Set default layer color for all parent nodes first
     for parent_item in get_all_parent_items():
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent_item,
         DEFAULT_LAYER_COLOR[0], DEFAULT_LAYER_COLOR[1], DEFAULT_LAYER_COLOR[2])
-    # Set active layer color 
+    # Set active layer color
+    active_layer = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
+    if active_layer:
+        item = get_parent_item_by_label(active_layer)
+        tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
+        ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
+    # Set muted layers color
+
+
+def layer_item_callback(req, widget, action):
+    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
+    # Detach all curves
+    tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
+    # Attach Curves
     for item in sel_items:
+        item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
+        item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
+        if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
+            curve = item_label.split("-")[1]
+            tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
+                                item_color[0],item_color[1],item_color[2],1)
+        # update active layer status data 
         parent = item
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
             parent = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
@@ -466,31 +486,15 @@ def set_active_layer():
         if not "BaseAnimation" in label:
             # Make sure it is not muted layer
             if not tde4.getListWidgetItemColor(req, "layers_list_wdgt", parent) == MUTE_LAYER_COLOR:
-                tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent,
-                ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
-                # Update layers status data
                 data = load_data()
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = label
                 save_data(data)
-                break
+    # Set layer colors
+    set_layer_colors(cam_pers_id, pg_pers_id)
+    # Auto view all
+    if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
+        view_all_helper() 
 
-
-def layer_item_callback(req, widget, action):
-    sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
-    if len(sel_items) > 0:
-        tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
-        for item in sel_items:
-            item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
-            item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
-            if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
-                curve = item_label.split("-")[1]
-                tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
-                                   item_color[0],item_color[1],item_color[2],1)
-        # Set active layer
-        set_active_layer()
-        # Auto view all
-        if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
-            view_all_helper() 
 
 def get_animlayer_increment_number():
     nums = [0]
@@ -502,22 +506,54 @@ def get_animlayer_increment_number():
     return max(nums)+1
 
 
+def sort_layers_order(cam_pers_id, pg_pers_id):
+    data = load_data()
+    order = []
+    parent_items = get_all_parent_items()
+    for parent_item in parent_items:
+        parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
+                                                                    parent_item)
+        d = {parent_label: []}
+        for child_item in range(parent_item+1, parent_item+8):
+            child_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
+                                                                     child_item)
+            child_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt",
+                                                                     child_item)
+            d[parent_label].append((child_label, child_color))
+        order.append(d)
+    # Insert last element as first element
+    order.insert(0, order.pop(-1))
+    # Remove all items
+    tde4.removeAllListWidgetItems(req, "layers_list_wdgt")
+    # Create new items from stored data
+    for i in order:
+        for parent_label in i.keys():
+            parent = tde4.insertListWidgetItem(req, "layers_list_wdgt",
+                                              parent_label, 0, "LIST_ITEM_NODE")
+            tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent, 0)
+            for item in i[parent_label]:
+                child_label = item[0]
+                child_color = item[1]
+                child = tde4.insertListWidgetItem(req, "layers_list_wdgt",
+                                       child_label, 0, "LIST_ITEM_ATOM", parent)
+                tde4.setListWidgetItemColor(req, "layers_list_wdgt", child, 
+                                 child_color[0], child_color[1], child_color[2])
+    # update layers order data
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels()
+    save_data(data)
+    # Set layer colors(active, muted)               
+    set_layer_colors(cam_pers_id, pg_pers_id)
+
+
 def create_empty_layer_callback(req, widget, action):
     layer_name = NEW_LAYER_NAME + str(get_animlayer_increment_number())
     insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), layer_name)
     create_curve_set(cam_pers_id, pg_pers_id, layer_name)
-
-
-    
-
-# TODO: add sort layers function
-
-
+    sort_layers_order(cam_pers_id, pg_pers_id)
 
 
 def test(req, widget, action):
-    data = load_data()
-    print data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
+    sort_layers_order(cam_pers_id, pg_pers_id)
 
 
 
@@ -556,6 +592,9 @@ if is_frame_count_changed == False and is_pg_animation_changed(cam_pers_id, pg_p
 else:
     insert_inital_data(cam_pers_id, pg_pers_id, True, False)
     create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation")
+
+# Set layer colors
+set_layer_colors(cam_pers_id, pg_pers_id)
 
 
 #Callbacks
