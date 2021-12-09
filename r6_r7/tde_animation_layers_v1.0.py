@@ -14,6 +14,7 @@ import json
 from vl_sdv import*
 
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
+RENAME_WINDOW_TITLE = "Rename Layer"
 PERSISTENT_STRING_NAME = "PATCHA_3DE_ANIMATION_LAYERS_DATA"
 SPACE_MULTIPLIER = 10
 CURVE_NAMES = ["Pos X", "Pos Y", "Pos Z", "Rot X", "Rot Y", "Rot Z", "Weight"]
@@ -461,7 +462,7 @@ def set_layer_colors(cam_pers_id, pg_pers_id):
     if active_layer:
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
-        ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
+            ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
     # Set muted layers color
 
 
@@ -513,13 +514,15 @@ def sort_layers_order(cam_pers_id, pg_pers_id):
     for parent_item in parent_items:
         parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
                                                                     parent_item)
+        parent_collapse_flag = tde4.getListWidgetItemCollapsedFlag(req, "layers_list_wdgt",
+                                                                    parent_item)
         d = {parent_label: []}
         for child_item in range(parent_item+1, parent_item+8):
             child_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
                                                                      child_item)
             child_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt",
                                                                      child_item)
-            d[parent_label].append((child_label, child_color))
+            d[parent_label].append((parent_collapse_flag, child_label, child_color))
         order.append(d)
     # Insert last element as first element
     order.insert(0, order.pop(-1))
@@ -530,19 +533,26 @@ def sort_layers_order(cam_pers_id, pg_pers_id):
         for parent_label in i.keys():
             parent = tde4.insertListWidgetItem(req, "layers_list_wdgt",
                                               parent_label, 0, "LIST_ITEM_NODE")
-            tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent, 0)
             for item in i[parent_label]:
-                child_label = item[0]
-                child_color = item[1]
+                parent_collapse_flag = item[0]
+                child_label = item[1]
+                child_color = item[2]
+                tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent,
+                                                           parent_collapse_flag)
                 child = tde4.insertListWidgetItem(req, "layers_list_wdgt",
                                        child_label, 0, "LIST_ITEM_ATOM", parent)
                 tde4.setListWidgetItemColor(req, "layers_list_wdgt", child, 
                                  child_color[0], child_color[1], child_color[2])
     # update layers order data
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels()
-    save_data(data)
+    update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels())
     # Set layer colors(active, muted)               
     set_layer_colors(cam_pers_id, pg_pers_id)
+
+
+def update_layers_order_data(cam_pers_id, pg_pers_id, order_list):
+    data = load_data()
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = order_list
+    save_data(data) 
 
 
 def create_empty_layer_callback(req, widget, action):
@@ -552,10 +562,44 @@ def create_empty_layer_callback(req, widget, action):
     sort_layers_order(cam_pers_id, pg_pers_id)
 
 
+def get_active_layer(cam_pers_id, pg_pers_id):
+    data = load_data()
+    return data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
+
+
+def rename_layer_callback(req, widget, action):    
+    active_layer = get_active_layer(cam_pers_id, pg_pers_id)
+    if not active_layer:
+        tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, No active layer found to rename.", "Ok")
+        return
+    rename_req = tde4.createCustomRequester()
+    tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name")
+    tde4.setWidgetOffsets(rename_req,"layer_rename_wdgt",60,10,5,0)
+    tde4.setWidgetAttachModes(rename_req,"layer_rename_wdgt","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+    tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20) 
+    if tde4.postCustomRequester(rename_req, RENAME_WINDOW_TITLE, 600, 100, "Ok", "Cancel") == 1:
+        new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
+        if not new_name:
+            return
+        if new_name in get_parent_item_labels():
+            tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, name already exists.", "Ok")
+            return
+        item = get_parent_item_by_label(active_layer)
+        tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
+        # update layers data
+        data = load_data()
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers"][new_name] = (data[str(cam_pers_id)][str(pg_pers_id)]["layers"]).pop(active_layer)
+        # update active layer status
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = str(new_name)
+        save_data(data)
+        # update layers order data
+        update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels())              
+
+
 def test(req, widget, action):
-    sort_layers_order(cam_pers_id, pg_pers_id)
-
-
+    data = load_data()
+    print data[str(cam_pers_id)][str(pg_pers_id)]["layers"].keys()
+    print data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
 
 
 
@@ -602,6 +646,7 @@ tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
+tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
 
 
 
@@ -611,7 +656,6 @@ tde4.setWidgetCallbackFunction(req, "update_viewport_btn", "test")
 
 
 tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
-tde4.updateGUI()
 tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 
