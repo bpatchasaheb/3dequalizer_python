@@ -208,6 +208,12 @@ tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
 
+
+# Show pgroup name
+pg_name = tde4.getPGroupName(pg)
+cam_name = tde4.getCameraName(cam)
+tde4.setWidgetValue(req, "pgroup_name_wdgt", str(pg_name+" | "+ cam_name))
+
 tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt", frame_offset-1)
 
 
@@ -367,6 +373,7 @@ def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
                                                                 "weight": {1:1}}})
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"].append(layer_name)
     save_data(data)
+
 
 def convert_to_angles(r3d):
     rot	= rot3d(mat3d(r3d)).angles(VL_APPLY_ZXY)
