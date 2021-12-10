@@ -39,8 +39,8 @@ frame_offset = tde4.getCameraFrameOffset(cam)
 cam_pers_id = tde4.getCameraPersistentID(cam)
 pg_pers_id = tde4.getPGroupPersistentID(pg)
 
+# GUI
 req = tde4.createCustomRequester()
-
 tde4.addListWidget(req,"layers_list_wdgt","",1)
 tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,90)
 tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW")
@@ -106,10 +106,14 @@ tde4.addMenuSeparatorWidget(req,"w045","layers_menu_wdgt")
 tde4.setWidgetOffsets(req,"w045",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w045","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"w045",80,20)
-tde4.addMenuButtonWidget(req,"make_layers_empty_menu_btn","Make Layers Empty","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"make_layers_empty_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"make_layers_empty_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"make_layers_empty_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"collapse_all_menu_btn","Collapse All Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"collapse_all_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"collapse_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"collapse_all_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"expand_all_menu_btn","Expand All Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"expand_all_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"expand_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"expand_all_menu_btn",80,20)
 tde4.addMenuWidget(req,"keys_menu","Keys","w006",0)
 tde4.setWidgetOffsets(req,"keys_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"keys_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -617,17 +621,23 @@ def delete_layers_callback(req, widget, action):
             tde4.postQuestionRequester(WINDOW_TITLE, "Warning, BaseAnimation layer can not be deleted.", "Ok")
             return
         tde4.removeListWidgetItem(req, "layers_list_wdgt", item)
-
         # Update layers data
         del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(label)]
-
         # Update active layer data to None
         data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
-
     # Update layers order
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(False)
-
     save_data(data)
+
+
+def collapse_or_expand_layers_callback(req, widget, action):
+    for item in get_parent_items(False):
+        if widget == "collapse_all_menu_btn":
+            tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 1)
+        if widget == "expand_all_menu_btn":
+            tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 0)
+
+
 
 
 
@@ -685,6 +695,8 @@ tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
+tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
+tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 
 
 
