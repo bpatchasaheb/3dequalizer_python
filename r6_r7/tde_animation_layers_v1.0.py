@@ -78,10 +78,6 @@ tde4.addMenuButtonWidget(req,"del_layers_menu_btn","Delete Layers","layers_menu_
 tde4.setWidgetOffsets(req,"del_layers_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"del_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"del_layers_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"del_empty_layers_menu_btn","Delete Empty Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"del_empty_layers_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"del_empty_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"del_empty_layers_menu_btn",80,20)
 tde4.addMenuSeparatorWidget(req,"w018","layers_menu_wdgt")
 tde4.setWidgetOffsets(req,"w018",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w018","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -280,7 +276,7 @@ def create_curve_set(cam_pers_id, pg_pers_id, layer_name):
     curve_ids = [pos_x_curve, pos_y_curve, pos_z_curve,
                  rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
     parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
-                                            0, "LIST_ITEM_NODE")                                            
+                                            0, "LIST_ITEM_NODE")
     tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 0)
     for count, curve_id in enumerate(curve_ids):
         item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
