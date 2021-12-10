@@ -424,25 +424,29 @@ def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
     insert_base_anim_data(cam_pers_id, pg_pers_id)
 
 
-def get_all_parent_items():
+def get_parent_items(selected=False):
     parent_nodes = []
-    items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
-    for item in range(items):
+    if selected == False:
+        items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
+        items = range(items)
+    else:
+        items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt")
+    for item in items:
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_NODE":
             parent_nodes.append(item)
     return parent_nodes
 
 
-def get_parent_item_labels():
+def get_parent_item_labels(selected=False):
     item_labels = []
-    for item in get_all_parent_items():
+    for item in get_parent_items(selected):
         label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
         item_labels.append(label)
     return item_labels
 
 
 def get_parent_item_by_label(label):
-    for item in get_all_parent_items():
+    for item in get_parent_items(False):
         if tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item) == label:
             item = item
             break
@@ -454,7 +458,7 @@ def get_parent_item_by_label(label):
 def set_layer_colors(cam_pers_id, pg_pers_id):
     data = load_data()
     # Set default layer color for all parent nodes first
-    for parent_item in get_all_parent_items():
+    for parent_item in get_parent_items(False):
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent_item,
         DEFAULT_LAYER_COLOR[0], DEFAULT_LAYER_COLOR[1], DEFAULT_LAYER_COLOR[2])
     # Set active layer color
@@ -499,7 +503,7 @@ def layer_item_callback(req, widget, action):
 
 def get_animlayer_increment_number():
     nums = [0]
-    item_labels = get_parent_item_labels()
+    item_labels = get_parent_item_labels(False)
     for label in item_labels:
         if NEW_LAYER_NAME in label:
             label = label.replace(NEW_LAYER_NAME, "")
@@ -511,7 +515,7 @@ def get_animlayer_increment_number():
 def sort_layers_order(cam_pers_id, pg_pers_id):
     data = load_data()
     order = []
-    parent_items = get_all_parent_items()
+    parent_items = get_parent_items(False)
     for parent_item in parent_items:
         parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
                                                                     parent_item)
@@ -545,7 +549,7 @@ def sort_layers_order(cam_pers_id, pg_pers_id):
                 tde4.setListWidgetItemColor(req, "layers_list_wdgt", child, 
                                  child_color[0], child_color[1], child_color[2])
     # update layers order data
-    update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels())
+    update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels(False))
     # Set layer colors(active, muted)               
     set_layer_colors(cam_pers_id, pg_pers_id)
 
@@ -589,7 +593,7 @@ def rename_layer_callback(req, widget, action):
         new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
         if not new_name:
             return
-        if new_name in get_parent_item_labels():
+        if new_name in get_parent_item_labels(False):
             tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, name already exists.", "Ok")
             return
         item = get_parent_item_by_label(active_layer)
@@ -597,7 +601,36 @@ def rename_layer_callback(req, widget, action):
         # Update active layer data
         update_active_layer_data(cam_pers_id, pg_pers_id, active_layer, new_name)
         # Update layers order data
-        update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels())              
+        update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels(False)) 
+
+
+def delete_layers_callback(req, widget, action):
+    data = load_data()
+    sel_labels = get_parent_item_labels(True)
+    if not sel_labels:
+        tde4.postQuestionRequester(WINDOW_TITLE, "Warning, No layers are selected.", "Ok")
+        return
+    for label in sel_labels:
+        item = get_parent_item_by_label(label)
+        # BaseAnimation layer can not be deleted
+        if label == "BaseAnimation":
+            tde4.postQuestionRequester(WINDOW_TITLE, "Warning, BaseAnimation layer can not be deleted.", "Ok")
+            return
+        tde4.removeListWidgetItem(req, "layers_list_wdgt", item)
+
+        # Update layers data
+        del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(label)]
+
+        # Update active layer data to None
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
+
+    # Update layers order
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(False)
+
+    save_data(data)
+
+
+
 
 
 def test(req, widget, action):
@@ -651,6 +684,7 @@ tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
+tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
 
 
 
@@ -659,7 +693,8 @@ tde4.setWidgetCallbackFunction(req, "update_viewport_btn", "test")
 
 
 
-tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
+# tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
+tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1200, 900, "cursor_update")
 tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 
