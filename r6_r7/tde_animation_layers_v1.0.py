@@ -14,7 +14,8 @@ import json
 from vl_sdv import*
 
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
-RENAME_WINDOW_TITLE = "Rename Layer"
+RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
+DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
 PERSISTENT_STRING_NAME = "PATCHA_3DE_ANIMATION_LAYERS_DATA"
 SPACE_MULTIPLIER = 10
 CURVE_NAMES = ["Pos X", "Pos Y", "Pos Z", "Rot X", "Rot Y", "Rot Z", "Weight"]
@@ -589,19 +590,19 @@ def get_active_layer(cam_pers_id, pg_pers_id):
 def rename_layer_callback(req, widget, action):    
     active_layer = get_active_layer(cam_pers_id, pg_pers_id)
     if not active_layer:
-        tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, No active layer found to rename.", "Ok")
+        tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE, "Warning, No active layer found to rename.", "Ok")
         return
     rename_req = tde4.createCustomRequester()
     tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name", str(active_layer))
     tde4.setWidgetOffsets(rename_req,"layer_rename_wdgt",60,10,5,0)
     tde4.setWidgetAttachModes(rename_req,"layer_rename_wdgt","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
     tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20) 
-    if tde4.postCustomRequester(rename_req, RENAME_WINDOW_TITLE, 600, 100, "Ok", "Cancel") == 1:
+    if tde4.postCustomRequester(rename_req, RENAME_LAYER_WINDOW_TITLE, 600, 100, "Ok", "Cancel") == 1:
         new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
         if not new_name:
             return
         if new_name in get_parent_item_labels(False):
-            tde4.postQuestionRequester(RENAME_WINDOW_TITLE, "Warning, name already exists.", "Ok")
+            tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE, "Warning, name already exists.", "Ok")
             return
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
@@ -615,13 +616,13 @@ def delete_layers_callback(req, widget, action):
     data = load_data()
     sel_labels = get_parent_item_labels(True)
     if not sel_labels:
-        tde4.postQuestionRequester(WINDOW_TITLE, "Warning, No layers are selected.", "Ok")
+        tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE, "Warning, No layers are selected.", "Ok")
         return
     for label in sel_labels:
         item = get_parent_item_by_label(label)
         # BaseAnimation layer can not be deleted
         if label == "BaseAnimation":
-            tde4.postQuestionRequester(WINDOW_TITLE, "Warning, BaseAnimation layer can not be deleted.", "Ok")
+            tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE, "Warning, BaseAnimation layer can not be deleted.", "Ok")
             return
         tde4.removeListWidgetItem(req, "layers_list_wdgt", item)
         # Update layers data
