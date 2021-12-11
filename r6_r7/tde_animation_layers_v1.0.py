@@ -4,7 +4,7 @@
 # 3DE4.script.gui: Orientation Controls::Edit
 # 3DE4.script.gui.button: Lineup Controls::Anim Layers, align-bottom-left, 80,20
 # 3DE4.script.gui.button: Orientation Controls::Anim Layers, align-bottom-left, 70,20
-# 3DE4.script.comment:  This tool works as Maya Animation Layers.
+# 3DE4.script.comment: This tool works as Maya Animation Layers.
 # 3DE4.script.gui.config_menus: true
 
 # Patcha Saheb(patchasaheb@gmail.com)
@@ -487,9 +487,16 @@ def layer_item_callback(req, widget, action):
         item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
         item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
+            # Disable curves for BaseAnimation layer
+            parent_item = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
+            parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", parent_item)
+            if parent_label == "BaseAnimation":
+                edit_status = 0
+            else:
+                edit_status = 1
             curve = item_label.split("-")[1]
             tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
-                                item_color[0],item_color[1],item_color[2],1)
+                                item_color[0],item_color[1],item_color[2], edit_status)
         # update active layer status data 
         parent = item
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
@@ -620,7 +627,7 @@ def delete_layers_callback(req, widget, action):
         return
     for label in sel_labels:
         item = get_parent_item_by_label(label)
-        # BaseAnimation layer can not be deleted
+        # BaseAnimation layer can not be deletedSs
         if label == "BaseAnimation":
             tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE, "Warning, BaseAnimation layer can not be deleted.", "Ok")
             return
