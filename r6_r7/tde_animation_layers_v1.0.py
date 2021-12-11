@@ -16,6 +16,7 @@ from vl_sdv import*
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
+CREATE_KEY_WINDOW_TITLE = "Create Key"
 PERSISTENT_STRING_NAME = "PATCHA_3DE_ANIMATION_LAYERS_DATA"
 SPACE_MULTIPLIER = 10
 CURVE_NAMES = ["Pos X", "Pos Y", "Pos Z", "Rot X", "Rot Y", "Rot Z", "Weight"]
@@ -31,30 +32,21 @@ ACTIVE_LAYER_COLOR = [0.0, 1.0, 0.0]
 MUTE_LAYER_COLOR = [1.0, 1.0, 0.0]
 NEW_LAYER_NAME = "AnimLayer"
 
-pg = tde4.getCurrentPGroup()
-cam = tde4.getCurrentCamera()
-current_frame = tde4.getCurrentFrame(cam)
-frames = tde4.getCameraNoFrames(cam)
-frame_offset = tde4.getCameraFrameOffset(cam)
-
-cam_pers_id = tde4.getCameraPersistentID(cam)
-pg_pers_id = tde4.getPGroupPersistentID(pg)
 
 # GUI
 req = tde4.createCustomRequester()
 tde4.addListWidget(req,"layers_list_wdgt","",1)
-tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,90)
-tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW")
+tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,50,90)
+tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"layers_list_wdgt",280,150)
 tde4.addCurveAreaWidget(req,"curve_area_wdgt","")
 tde4.setWidgetOffsets(req,"curve_area_wdgt",5,5,25,30)
 tde4.setWidgetAttachModes(req,"curve_area_wdgt","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"curve_area_wdgt",150,150)
-tde4.addTextFieldWidget(req,"pgroup_name_wdgt","","")
-tde4.setWidgetOffsets(req,"pgroup_name_wdgt",5,5,25,0)
-tde4.setWidgetAttachModes(req,"pgroup_name_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"pgroup_name_wdgt",200,20)
-tde4.setWidgetSensitiveFlag(req,"pgroup_name_wdgt",0)
+tde4.addOptionMenuWidget(req,"pg_option_menu_wdgt","","temp")
+tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,25,0)
+tde4.setWidgetAttachModes(req,"pg_option_menu_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"pg_option_menu_wdgt",150,20)
 tde4.addMenuBarWidget(req,"w006")
 tde4.setWidgetOffsets(req,"w006",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w006","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
@@ -151,6 +143,10 @@ tde4.addMenuToggleWidget(req,"show_timeline_keys_menu_btn","Show Timeline Keys",
 tde4.setWidgetOffsets(req,"show_timeline_keys_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"show_timeline_keys_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"show_timeline_keys_menu_btn",80,20)
+tde4.addMenuToggleWidget(req,"auto_key_menu_toggle_btn","Auto Key","keys_menu",1)
+tde4.setWidgetOffsets(req,"auto_key_menu_toggle_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"auto_key_menu_toggle_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"auto_key_menu_toggle_btn",80,20)
 tde4.addMenuWidget(req,"objpg_menu","ObjectPG","w006",0)
 tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -195,9 +191,9 @@ tde4.addButtonWidget(req,"tween_reset_btn","R")
 tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
 tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"tween_reset_btn",30,20)
-tde4.setWidgetLinks(req,"layers_list_wdgt","","","pgroup_name_wdgt","")
+tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
 tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
-tde4.setWidgetLinks(req,"pgroup_name_wdgt","curve_area_wdgt","","w006","")
+tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
 tde4.setWidgetLinks(req,"w006","","","","")
 tde4.setWidgetLinks(req,"auto_view_all_toggle_btn","","view_all_btn","curve_area_wdgt","")
 tde4.setWidgetLinks(req,"view_all_btn","","","curve_area_wdgt","")
@@ -209,13 +205,19 @@ tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
 
-
-# Show pgroup name
-pg_name = tde4.getPGroupName(pg)
-cam_name = tde4.getCameraName(cam)
-tde4.setWidgetValue(req, "pgroup_name_wdgt", str(pg_name+" | "+ cam_name))
-
+cam = tde4.getCurrentCamera()
+frame_offset = tde4.getCameraFrameOffset(cam)
 tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt", frame_offset-1)
+
+
+def get_cam_pers_id():
+    cam = tde4.getCurrentCamera()
+    return tde4.getCameraPersistentID(cam)
+
+
+def get_pg_pers_id():
+    pg = tde4.getCurrentPGroup()
+    return tde4.getPGroupPersistentID(pg)
 
 
 def load_data():
@@ -244,6 +246,9 @@ def curve_area_callback(req, widget, action):
 
 
 def snap_edit_to_filtered_curves():
+    pg = tde4.getCurrentPGroup()
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
     pg_type = tde4.getPGroupType(pg)
     for frame in range(1, frames+1):
         pos = tde4.getPGroupPosition3D(pg, cam, frame)
@@ -270,7 +275,9 @@ def extract_keys_from_data(curve, axis_data):
         tde4.setCurveKeyFixedXFlag(curve, key, 1)
 
 
-def create_curve_set(cam_pers_id, pg_pers_id, layer_name): 
+def create_curve_set(layer_name): 
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     # Create curves, insert list widget items
     pos_x_curve = tde4.createCurve()
@@ -345,7 +352,11 @@ def view_all_btn_callback(req, widget, action):
     view_all_helper()
 
 
-def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, axis):
+def insert_pg_editcurve_data(layer_name, edit_curve, axis):
+    pg = tde4.getCurrentPGroup()
+    cam = tde4.getCurrentCamera()
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     curve = tde4.getPGroupEditCurveGlobalSpace(pg, cam, edit_curve)
     key_list = tde4.getCurveKeyList(curve, 0)
@@ -356,14 +367,14 @@ def insert_pg_editcurve_data(cam_pers_id, pg_pers_id, layer_name, edit_curve, ax
     save_data(data)  
 
 
-def insert_base_anim_data(cam_pers_id, pg_pers_id):
-    data = load_data()
+def insert_base_anim_data():
     for count, edit_curve in enumerate(EDIT_CURVES_LIST):
-        insert_pg_editcurve_data(cam_pers_id, pg_pers_id, "BaseAnimation",
-                                           EDIT_CURVES_LIST[count], AXES[count])
+        insert_pg_editcurve_data("BaseAnimation", EDIT_CURVES_LIST[count], AXES[count])
 
 
-def insert_empty_layer_data(cam_pers_id, pg_pers_id, layer_name):
+def insert_empty_layer_data(layer_name):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     data = load_data()
     data[str(cam_pers_id)][str(pg_pers_id)]["layers"].update({layer_name: {"position_x": {}, 
                                                                 "position_y": {},
@@ -387,24 +398,33 @@ def convert_to_angles(r3d):
     return[rx,ry,rz]
 
 
-def insert_pg_bake_data(pg):
+def insert_pg_bake_data():
+    pg = tde4.getCurrentPGroup()
+    cam = tde4.getCurrentCamera()
+    frames = tde4.getCameraNoFrames(cam)
     bake_data = {"position": {}, "rotation": {}}
     for frame in range(1, frames+1):
-        pos_3d = tde4.getPGroupPosition3D(pg, cam,frame)
-        rot_3d = tde4.getPGroupRotation3D(pg,cam,frame)
+        pos_3d = tde4.getPGroupPosition3D(pg, cam, frame)
+        pos_3d = [round(pos_3d[0], 4), round(pos_3d[1], 4), round(pos_3d[1], 4)]
+        rot_3d = tde4.getPGroupRotation3D(pg, cam, frame)
         rot_3d = convert_to_angles(rot_3d)
         bake_data["position"][frame] = pos_3d
         bake_data["rotation"][frame] = rot_3d
     return bake_data
     
 
-def is_pg_animation_changed(cam_pers_id, pg_pers_id, pg):
-    status = False
+def is_pg_animation_changed():
+    pg = tde4.getCurrentPGroup()
+    cam = tde4.getCurrentCamera()
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     data = load_data()
+    status = False
     pos_3d_data = data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["position"]
     rot_3d_data = data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["rotation"]
     for frame in pos_3d_data.keys():
         pos_3d = tde4.getPGroupPosition3D(pg, cam, int(frame))
+        pos_3d = [round(pos_3d[0], 4), round(pos_3d[1], 4), round(pos_3d[1], 4)]
         rot_3d = tde4.getPGroupRotation3D(pg, cam, int(frame))
         rot_3d = convert_to_angles(rot_3d)
         if (not pos_3d_data[str(frame)] == pos_3d) or (not rot_3d_data[str(frame)] == rot_3d):
@@ -413,23 +433,25 @@ def is_pg_animation_changed(cam_pers_id, pg_pers_id, pg):
     return status
 
 
-def insert_inital_data(cam_pers_id, pg_pers_id, for_cam=False, for_pg=False):
+def insert_inital_data(for_cam=False, for_pg=False):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     data = load_data()
     if for_cam == True:
         data.update({str(cam_pers_id): {str(pg_pers_id): {"layers": {},
-                                                "bake": insert_pg_bake_data(pg),
+                                                "bake": insert_pg_bake_data(),
                                                 "frames_count": frames,
                                                 "layers_order": [],
                                                 "layers_status": {"active": None, "muted": []}}}})
     if for_pg == True:
         data[str(cam_pers_id)].update({str(pg_pers_id): {"layers": {},
-                                                "bake": insert_pg_bake_data(pg),
+                                                "bake": insert_pg_bake_data(),
                                                 "frames_count": frames,
                                                 "layers_order": [],
                                                 "layers_status": {"active": None, "muted": []}}})       
     save_data(data)
-    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), "BaseAnimation")
-    insert_base_anim_data(cam_pers_id, pg_pers_id)
+    insert_empty_layer_data("BaseAnimation")
+    insert_base_anim_data()
 
 
 def get_parent_items(selected=False):
@@ -463,7 +485,9 @@ def get_parent_item_by_label(label):
     return item
 
 
-def set_layer_colors(cam_pers_id, pg_pers_id):
+def set_layer_colors():
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     data = load_data()
     # Set default layer color for all parent nodes first
     for parent_item in get_parent_items(False):
@@ -476,9 +500,12 @@ def set_layer_colors(cam_pers_id, pg_pers_id):
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
             ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
     # Set muted layers color
+    # TODO
 
 
 def layer_item_callback(req, widget, action):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     sel_items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt") or []
     # Detach all curves
     tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")        
@@ -487,7 +514,7 @@ def layer_item_callback(req, widget, action):
         item_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
         item_color = tde4.getListWidgetItemColor(req, "layers_list_wdgt", item)
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
-            # Disable curves for BaseAnimation layer
+            # Disable BaseAnimation curves
             parent_item = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
             parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", parent_item)
             if parent_label == "BaseAnimation":
@@ -510,7 +537,7 @@ def layer_item_callback(req, widget, action):
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = label
                 save_data(data)
     # Set layer colors
-    set_layer_colors(cam_pers_id, pg_pers_id)
+    set_layer_colors()
     # Auto view all
     if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
         view_all_helper() 
@@ -527,7 +554,9 @@ def get_animlayer_increment_number():
     return max(nums)+1
 
 
-def sort_layers_order(cam_pers_id, pg_pers_id):
+def sort_layers_order():
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()      
     data = load_data()
     order = []
     parent_items = get_parent_items(False)
@@ -564,18 +593,22 @@ def sort_layers_order(cam_pers_id, pg_pers_id):
                 tde4.setListWidgetItemColor(req, "layers_list_wdgt", child, 
                                  child_color[0], child_color[1], child_color[2])
     # update layers order data
-    update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels(False))
+    update_layers_order_data(get_parent_item_labels(False))
     # Set layer colors(active, muted)               
-    set_layer_colors(cam_pers_id, pg_pers_id)
+    set_layer_colors()
 
 
-def update_layers_order_data(cam_pers_id, pg_pers_id, order_list):
+def update_layers_order_data(order_list):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = order_list
     save_data(data) 
 
 
-def update_active_layer_data(cam_pers_id, pg_pers_id, old_name, new_name):
+def update_active_layer_data(old_name, new_name):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     data[str(cam_pers_id)][str(pg_pers_id)]["layers"][new_name] = (data[str(cam_pers_id)][str(pg_pers_id)]["layers"]).pop(old_name)
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = str(new_name)
@@ -584,18 +617,20 @@ def update_active_layer_data(cam_pers_id, pg_pers_id, old_name, new_name):
 
 def create_empty_layer_callback(req, widget, action):
     layer_name = NEW_LAYER_NAME + str(get_animlayer_increment_number())
-    insert_empty_layer_data(str(cam_pers_id), str(pg_pers_id), layer_name)
-    create_curve_set(cam_pers_id, pg_pers_id, layer_name)
-    sort_layers_order(cam_pers_id, pg_pers_id)
+    insert_empty_layer_data(layer_name)
+    create_curve_set(layer_name)
+    sort_layers_order()
 
 
-def get_active_layer(cam_pers_id, pg_pers_id):
+def get_active_layer():
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     return data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
 
 
 def rename_layer_callback(req, widget, action):    
-    active_layer = get_active_layer(cam_pers_id, pg_pers_id)
+    active_layer = get_active_layer()
     if not active_layer:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE, "Warning, No active layer found to rename.", "Ok")
         return
@@ -614,12 +649,14 @@ def rename_layer_callback(req, widget, action):
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
         # Update active layer data
-        update_active_layer_data(cam_pers_id, pg_pers_id, active_layer, new_name)
+        update_active_layer_data(active_layer, new_name)
         # Update layers order data
-        update_layers_order_data(cam_pers_id, pg_pers_id, get_parent_item_labels(False)) 
+        update_layers_order_data(get_parent_item_labels(False)) 
 
 
 def delete_layers_callback(req, widget, action):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
     data = load_data()
     sel_labels = get_parent_item_labels(True)
     if not sel_labels:
@@ -649,65 +686,130 @@ def collapse_or_expand_layers_callback(req, widget, action):
             tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 0)
 
 
+def get_curves_by_layer_name(layer_name):
+    curve_ids = []
+    parent_item = get_parent_item_by_label(layer_name)
+    for item in range(parent_item+1, parent_item+7):
+        label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
+        curve_id = label.split("-")[1]
+        curve_ids.append(curve_id)
+    return curve_ids
+        
+
+def create_key_helper():
+    cam = tde4.getCurrentCamera()
+    frame   = tde4.getCurrentFrame(cam)
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()
+    active_layer = get_active_layer()
+    if not active_layer:
+        tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE, "Warning, No active layer found.", "Ok")
+        return
+    curves = get_curves_by_layer_name(active_layer)
+    for count, curve in enumerate(curves):
+        y_value = tde4.evaluateCurve(curve, frame)
+        key = tde4.createCurveKey(curve,[frame, y_value])
+        tde4.setCurveKeyMode(curve, key, "LINEAR")
+        tde4.setCurveKeyFixedXFlag(curve, key, 1)
+        # Update layers data
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
+    save_data(data)
 
 
+def create_key_callback(req, widget, action):
+    create_key_helper()
+
+
+def option_menu_helper():   
+    count = tde4.getWidgetValue(req, "pg_option_menu_wdgt")
+    pg_list = tde4.getPGroupList(0)
+    tde4.setCurrentPGroup(pg_list[count-1])
+
+    tde4.removeAllListWidgetItems(req, "layers_list_wdgt")
+    tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")
+
+    cam = tde4.getCurrentCamera()
+    frames = tde4.getCameraNoFrames(cam) 
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()       
+
+    if frames > 0:
+        # Bake post filtered buffer curves
+        snap_edit_to_filtered_curves()
+
+        # Handle persistent string
+        if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
+            data = {}
+            save_data(data)
+            insert_inital_data(True, False)
+        else:
+            # If cam_pers_id does not exist
+            data = load_data()
+            if not str(cam_pers_id) in data.keys():
+                insert_inital_data(True, False)
+
+            # If pg_pers_id does not exist
+            data = load_data()
+            if not str(pg_pers_id) in data[str(cam_pers_id)].keys():
+                insert_inital_data(False, True)    
+
+        # Create curve set
+        # Check frames count and bake data before creating curves
+        data = load_data()
+        is_frame_count_changed = False
+        if not int(data[str(cam_pers_id)][str(pg_pers_id)]["frames_count"]) == frames:
+            is_frame_count_changed = True
+
+        if is_frame_count_changed == False and is_pg_animation_changed() == False:
+            layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
+            for layer_name in layers_order:
+                create_curve_set(layer_name)
+        else:
+            insert_inital_data(True, False)
+            create_curve_set("BaseAnimation")
+
+        # Set layer colors
+        set_layer_colors()
+
+
+def option_menu_callback(req, widget, action):
+    option_menu_helper()
 
 
 
 def test(req, widget, action):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id() 
     data = load_data()
-    print data[str(cam_pers_id)][str(pg_pers_id)]["layers"].keys()
-    print data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
+
+    print data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["position"]
+    print data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["rotation"]   
 
 
+# Show pgroup names in option menu
+frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
+pg_name = tde4.getPGroupName(tde4.getCurrentPGroup())
+cam_name = tde4.getCameraName(tde4.getCurrentCamera())
+pg_names = [tde4.getPGroupName(i)+" | "+cam_name for i in tde4.getPGroupList(0)]
+stringlist = ",".join(['"%s"'%member for member in pg_names])
+eval('tde4.modifyOptionMenuWidget(req, "pg_option_menu_wdgt", " ", %s)'%stringlist)
 
-# Bake post filtered buffer curves
-snap_edit_to_filtered_curves()
 
-# Handle persistent string
-if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
-    data = {}
-    save_data(data)
-    insert_inital_data(cam_pers_id, pg_pers_id, True, False)
-else:
-    # If cam_pers_id does not exist
-    data = load_data()
-    if not str(cam_pers_id) in data.keys():
-        insert_inital_data(cam_pers_id, pg_pers_id, True, False)
-
-    # If pg_pers_id does not exist
-    data = load_data()
-    if not str(pg_pers_id) in data[str(cam_pers_id)].keys():
-        insert_inital_data(cam_pers_id, pg_pers_id, False, True)
-
-# Create curve set
-# Check frames count and bake data before creating curves
-data = load_data()
-is_frame_count_changed = False
-if not int(data[str(cam_pers_id)][str(pg_pers_id)]["frames_count"]) == frames:
-    is_frame_count_changed = True
-
-if is_frame_count_changed == False and is_pg_animation_changed(cam_pers_id, pg_pers_id, pg) == False:
-    layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
-    for layer_name in layers_order:
-        create_curve_set(cam_pers_id, pg_pers_id, layer_name)
-else:
-    insert_inital_data(cam_pers_id, pg_pers_id, True, False)
-    create_curve_set(cam_pers_id, pg_pers_id, "BaseAnimation")
-
-# Set layer colors
-set_layer_colors(cam_pers_id, pg_pers_id)
+option_menu_helper()
 
 
 #Callbacks
 tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
+tde4.setWidgetCallbackFunction(req, "pg_option_menu_wdgt", "option_menu_callback")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
+tde4.setWidgetCallbackFunction(req, "create_key_btn", "create_key_callback")
 
 
 
