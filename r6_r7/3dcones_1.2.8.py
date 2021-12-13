@@ -11,7 +11,7 @@
 # Patcha Saheb(patchasaheb@gmail.com)
 
 
-from vl_sdv import vec3d, mat3d, rot3d
+from vl_sdv import*
 import os,sys
 import math
 import json
