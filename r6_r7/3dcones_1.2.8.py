@@ -11,14 +11,24 @@
 # Patcha Saheb(patchasaheb@gmail.com)
 
 
-from vl_sdv import*
+from vl_sdv import vec3d, mat3d, rot3d
 import os,sys
 import math
 import json
+import tde4
 
 WINDOW_TITLE = "Patcha 3D Cones v1.2.8"
 CONE_NAME_PREFIX = "3D_Cone_"
 JSON_FILE_NAME = "patcha_3d_cones_presets.json"
+WIDGETS = ["show_lines_rdo_box", "show_polygons_rdo_box", "scale_slider",
+           "scale_text_value", "prop_scale_rdo_box", "prop_scale_x_txt",
+		   "prop_scale_y_txt", "prop_scale_z_txt", "color_red_slider",
+		   "color_green_slider", "color_blue_slider", "color_alpha_slider",
+           "scale_x_txt_value", "scale_y_txt_value", "scale_z_txt_value",
+           "rot_x_txt_value", "rot_y_txt_value", "rot_z_txt_value","red_menu_btn",
+		   "green_menu_btn", "blue_menu_btn", "yellow_menu_btn", "black_menu_btn",
+		   "white_menu_btn", "gray_menu_btn", "purple_menu_btn", "cyan_menu_btn",
+		   "box_cone_menu_btn", "round_cone_menu_btn", "cube_menu_btn", "locator_menu_btn"]
 
 
 def create_box_cone():
@@ -45,6 +55,7 @@ def create_box_cone():
 	tde4.set3DModelSurveyFlag(pg, model, 0)
 	tde4.set3DModelColor(pg, model, 1.0,0.0,0.0,1.0)
 	return model
+
 
 def create_round_cone():
 	pg = tde4.getCurrentPGroup()
@@ -94,7 +105,8 @@ def create_round_cone():
 	tde4.add3DModelFace(pg, model, [i16, i1, i0])
 	tde4.set3DModelSurveyFlag(pg, model, 0)
 	tde4.set3DModelColor(pg, model, 1.0,0.0,0.0,1.0)
-	return model		
+	return model
+
 
 def create_cube():
 	pg = tde4.getCurrentPGroup()
@@ -121,6 +133,7 @@ def create_cube():
 	tde4.set3DModelColor(pg, model, 1.0,0.0,0.0,1.0)
 	return model
 
+
 def create_locator():
 	pg = tde4.getCurrentPGroup()
 	model = tde4.create3DModel(pg, 8)
@@ -137,6 +150,7 @@ def create_locator():
 	tde4.set3DModelColor(pg, model, 1.0,0.0,0.0,1.0)
 	return model
 
+
 def get_all_model_list(filter_selected=False):
 	models = []
 	pg = tde4.getCurrentPGroup()
@@ -150,6 +164,7 @@ def get_all_model_list(filter_selected=False):
 		if CONE_NAME_PREFIX in name:
 			models.append(model)
 	return models
+
 
 def create_models_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -169,11 +184,13 @@ def create_models_callback(req, widget, action):
 			tde4.set3DModelPosition3D(pg, model, point_pos)
 			tde4.set3DModelSnappingPoint(pg, model, point)
 
+
 def select_all_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	model_list = get_all_model_list() or []
 	for model in model_list:
 		tde4.set3DModelSelectionFlag(pg, model, 1)
+
 
 def delete_models():
 	pg = tde4.getCurrentPGroup()
@@ -181,6 +198,7 @@ def delete_models():
 	if model_list:
 		for model in model_list:
 			tde4.delete3DModel(pg, model)
+
 
 def delete_extra_models_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -194,8 +212,10 @@ def delete_extra_models_callback(req, widget, action):
 	if count > 0:
 		tde4.postQuestionRequester(WINDOW_TITLE, "Number of 3DCone model(s) deleted: "+str(count), "ok")
 
+
 def delete_all_models_callback(req, widget, action):
 	delete_models()
+
 
 def prop_scale_rdo_toggle():
 	prop_scale_enable = tde4.getWidgetValue(req, "prop_scale_rdo_box")
@@ -225,6 +245,7 @@ def prop_scale_rdo_toggle():
 		if scale_value > 10.0:
 			tde4.setWidgetSensitiveFlag(req, "scale_slider", 0)
 
+
 def get_model_rotation_scale(model):
 	pg = tde4.getCurrentPGroup()
 	matrices = []
@@ -236,6 +257,7 @@ def get_model_rotation_scale(model):
 	matrices.append(scale_matrix)
 	return matrices
 
+
 def set_model_scale(models, x, y, z):
 	pg = tde4.getCurrentPGroup()
 	cam = tde4.getCurrentCamera()
@@ -246,54 +268,64 @@ def set_model_scale(models, x, y, z):
 			rotation_matrix = get_model_rotation_scale(model)[0]
 			scale_matrix = mat3d(float(x),0.0,0.0, 0.0,float(y),0.0, 0.0,0.0,float(z))
 			final_matrix = rotation_matrix * scale_matrix
-			tde4.set3DModelRotationScale3D(pg, model, final_matrix.list())				
+			tde4.set3DModelRotationScale3D(pg, model, final_matrix.list())
+
 
 def scale_callback(req, widget, action):
-	pg = tde4.getCurrentPGroup()
-	cam = tde4.getCurrentCamera()
-	frame = tde4.getCurrentFrame(cam)
 	slider_value = tde4.getWidgetValue(req, "scale_slider")
 	scale_value = float(tde4.getWidgetValue(req, "scale_text_value"))
 	scale_x_value = float(tde4.getWidgetValue(req, "scale_x_txt_value"))
 	scale_y_value = float(tde4.getWidgetValue(req, "scale_y_txt_value"))
 	scale_z_value = float(tde4.getWidgetValue(req, "scale_z_txt_value"))
-	prop_scale_rdo_box_value = tde4.getWidgetValue(req, "prop_scale_rdo_box")
-	prop_scale_x = float(tde4.getWidgetValue(req, "prop_scale_x_txt"))
-	prop_scale_y = float(tde4.getWidgetValue(req, "prop_scale_y_txt"))
-	prop_scale_z = float(tde4.getWidgetValue(req, "prop_scale_z_txt"))
-
 	models = get_all_model_list() or []
 	if widget == "scale_slider":
 		tde4.setWidgetValue(req, "scale_text_value", str(round(slider_value, 3)))
-
 	if widget == "scale_text_value":
 		if scale_value > 10.0:
 			tde4.setWidgetSensitiveFlag(req, "scale_slider", 0)
 		else:
 			tde4.setWidgetSensitiveFlag(req, "scale_slider", 1)
 			tde4.setWidgetValue(req, "scale_slider", str(scale_value))
-
-	if widget == "scale_slider" or widget == "scale_text_value" or prop_scale_rdo_box_value == 0:		
+	if widget == "scale_slider" or widget == "scale_text_value":		
 		set_model_scale(models, scale_value, scale_value, scale_value)
-
 	if widget == "scale_x_txt_value" or widget == "scale_y_txt_value" or widget == "scale_z_txt_value":
 		set_model_scale(models, scale_x_value, scale_y_value, scale_z_value)
+	load_save_gui_settings(req, "save")
 
-	if widget == "prop_scale_rdo_box":
-		prop_scale_rdo_toggle()
-		if prop_scale_rdo_box_value == 1:
-			cam_pos = tde4.getPGroupPosition3D(pg, cam, frame)
-			point_list = tde4.getPointList(pg, 0) or []
-			for point in point_list:
-				if tde4.isPointCalculated3D(pg, point):
-					point_pos = tde4.getPointCalcPosition3D(pg, point)
-					for model in models:
-						model_pos = tde4.get3DModelPosition3D(pg, model, cam, frame)
-						if point_pos == model_pos:
-							distance = (vec3d(cam_pos) - vec3d(point_pos)).norm2()
-							distance = float((1.5/100.0) * distance)
-							set_model_scale([model], distance, distance, distance)
 
+def prop_scale_callback(req, widget, action):
+	pg = tde4.getCurrentPGroup()
+	cam = tde4.getCurrentCamera()
+	frame = tde4.getCurrentFrame(cam)	
+	prop_scale_rdo_box_value = tde4.getWidgetValue(req, "prop_scale_rdo_box")
+	models = get_all_model_list() or []
+	prop_scale_rdo_toggle()
+	if prop_scale_rdo_box_value == 1:
+		cam_pos = tde4.getPGroupPosition3D(pg, cam, frame)
+		point_list = tde4.getPointList(pg, 0) or []
+		for point in point_list:
+			if tde4.isPointCalculated3D(pg, point):
+				point_pos = tde4.getPointCalcPosition3D(pg, point)
+				for model in models:
+					model_pos = tde4.get3DModelPosition3D(pg, model, cam, frame)
+					if point_pos == model_pos:
+						distance = (vec3d(cam_pos) - vec3d(point_pos)).norm2()
+						distance = float((1.5/100.0) * distance)
+						set_model_scale([model], distance, distance, distance)
+	else:
+		widget = "scale_text_value"
+		scale_callback(req, widget, action)
+
+	if widget == "prop_scale_x_txt" or "prop_scale_y_txt" or "prop_scale_z_txt":
+		load_save_gui_settings(req, "save")	
+
+
+def prop_scale_inc_dec_callback(req, widget, action):
+	pg = tde4.getCurrentPGroup()
+	prop_scale_x = float(tde4.getWidgetValue(req, "prop_scale_x_txt"))
+	prop_scale_y = float(tde4.getWidgetValue(req, "prop_scale_y_txt"))
+	prop_scale_z = float(tde4.getWidgetValue(req, "prop_scale_z_txt"))
+	models = get_all_model_list() or []
 	if widget == "scale_positive_btn" or widget == "scale_negative_btn":
 		for model in models:
 			rot_scale_matrix = mat3d(tde4.get3DModelRotationScale3D(pg, model)).trans()
@@ -311,11 +343,8 @@ def scale_callback(req, widget, action):
 			dx = scale_value_x + dx
 			dy = scale_value_y + dy
 			dz = scale_value_z + dz
-			set_model_scale([model], dx, dy, dz)
+			set_model_scale([model], dx, dy, dz)	
 
-	if widget == "prop_scale_x_txt" or "prop_scale_y_txt" or "prop_scale_z_txt":
-		load_save_gui_settings(req, "save")
-	load_save_gui_settings(req, "save")
 
 def rotation_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -337,15 +366,18 @@ def rotation_callback(req, widget, action):
 		tde4.set3DModelRotationScale3D(pg, model, final_matrix.list())
 	load_save_gui_settings(req, "save")
 
+
 def set_color_slider_value(r, g, b):
 	tde4.setWidgetValue(req, "color_red_slider", str(r))
 	tde4.setWidgetValue(req, "color_green_slider", str(g))
 	tde4.setWidgetValue(req, "color_blue_slider", str(b))
 
+
 def set_model_visibility(models, show_flag=False):
 	pg = tde4.getCurrentPGroup()
 	for model in models:
 		tde4.set3DModelVisibleFlag(pg, model, show_flag)
+
 
 def view_menu_callback(req, widget, action):
 	models = get_all_model_list() or []
@@ -362,17 +394,20 @@ def view_menu_callback(req, widget, action):
 		if models:
 			set_model_visibility(models, False)
 
+
 def deselect_all_other_models():
 	pg = tde4.getCurrentPGroup()
 	model_list = tde4.get3DModelList(pg, 0)
 	for model in model_list:
 		tde4.set3DModelSelectionFlag(pg, model, 0)
 
+
 def deselect_all_other_points():
 	pg = tde4.getCurrentPGroup()
 	point_list = tde4.getPointList(pg, 0) or []
 	for point in point_list:
 		tde4.setPointSelectionFlag(pg, point, 0)
+
 
 def select_menu_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -407,22 +442,24 @@ def select_menu_callback(req, widget, action):
 						if widget == "select_points_menu_btn":
 							tde4.setPointSelectionFlag(pg, point, 1)
 
+
 def color_menu_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	model_list = get_all_model_list() or []
-	if widget == "red_menu_btn": color = [1.0, 0.0, 0.0]
-	if widget == "green_menu_btn": color = [0.0, 1.0, 0.0]
-	if widget == "blue_menu_btn": color = [0.0, 0.0, 1.0]
-	if widget == "yellow_menu_btn": color = [1.0, 1.0, 0.0]
-	if widget == "black_menu_btn": color = [0.0, 0.0, 0.0]
-	if widget == "white_menu_btn": color = [1.0, 1.0, 1.0]
-	if widget == "gray_menu_btn": color = [0.5, 0.5, 0.5]
-	if widget == "purple_menu_btn": color = [1.0, 0.0, 1.0]
-	if widget == "cyan_menu_btn": color = [0.22, 0.45, 0.65]
+	if tde4.getWidgetValue(req, "red_menu_btn") == 1: color = [1.0, 0.0, 0.0]
+	if tde4.getWidgetValue(req, "green_menu_btn") == 1: color = [0.0, 1.0, 0.0]
+	if tde4.getWidgetValue(req, "blue_menu_btn") == 1: color = [0.0, 0.0, 1.0]
+	if tde4.getWidgetValue(req, "yellow_menu_btn") == 1: color = [1.0, 1.0, 0.0]
+	if tde4.getWidgetValue(req, "black_menu_btn") == 1: color = [0.0, 0.0, 0.0]
+	if tde4.getWidgetValue(req, "white_menu_btn") == 1: color = [1.0, 1.0, 1.0]
+	if tde4.getWidgetValue(req, "gray_menu_btn") == 1: color = [0.5, 0.5, 0.5]
+	if tde4.getWidgetValue(req, "purple_menu_btn") == 1: color = [1.0, 0.0, 1.0]
+	if tde4.getWidgetValue(req, "cyan_menu_btn") == 1: color = [0.22, 0.45, 0.65]
 	set_color_slider_value(color[0], color[1], color[2])
 	alpha = float(tde4.getWidgetValue(req, "color_alpha_slider")) 
 	for model in model_list:
 		tde4.set3DModelColor(pg, model, color[0], color[1], color[2], alpha )
+
 
 def color_slider_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -435,25 +472,17 @@ def color_slider_callback(req, widget, action):
 		tde4.set3DModelColor(pg, model, red, green, blue, alpha)
 	load_save_gui_settings(req, "save")
 
+
 def rendering_menu_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
 	show_lines_value = tde4.getWidgetValue(req, "show_lines_rdo_box")
 	show_polygons_value = tde4.getWidgetValue(req, "show_polygons_rdo_box")
-	if widget == "show_lines_rdo_box" or widget == "show_polygons_rdo_box":
-		model_list = get_all_model_list() or []
-		for model in model_list:
-			render_flag = tde4.get3DModelRenderingFlags(pg, model)
-			if widget == "show_lines_rdo_box":
-				if show_lines_value == 1:
-					tde4.set3DModelRenderingFlags(pg, model, render_flag[0], 1, render_flag[2])
-				else:
-					tde4.set3DModelRenderingFlags(pg, model, render_flag[0], 0, render_flag[2])
-			if widget == "show_polygons_rdo_box":
-				if show_polygons_value == 1:
-					tde4.set3DModelRenderingFlags(pg, model, render_flag[0] , render_flag[1], 1)
-				else:
-					tde4.set3DModelRenderingFlags(pg, model, render_flag[0], render_flag[1], 0)
-		load_save_gui_settings(req, "save")	
+	model_list = get_all_model_list() or []
+	for model in model_list:
+		render_flag = tde4.get3DModelRenderingFlags(pg, model)
+		tde4.set3DModelRenderingFlags(pg, model, render_flag[0], int(show_lines_value), int(show_polygons_value))
+	load_save_gui_settings(req, "save")	
+
 
 def model_shape_menu_callback(req, widget, action):
 	pg = tde4.getCurrentPGroup()
@@ -470,13 +499,13 @@ def model_shape_menu_callback(req, widget, action):
 		visibility = tde4.get3DModelVisibleFlag(pg, model)
 		snap_point = tde4.get3DModelSnappingPoint(pg, model)
 		tde4.delete3DModel(pg, model)
-		if widget == "box_cone_menu_btn":
+		if tde4.getWidgetValue(req,"box_cone_menu_btn") == 1:
 			new_model = create_box_cone()
-		if widget == "round_cone_menu_btn":
+		if tde4.getWidgetValue(req,"round_cone_menu_btn") == 1:
 			new_model = create_round_cone()
-		if widget == "cube_menu_btn":
+		if tde4.getWidgetValue(req,"cube_menu_btn") == 1:		
 			new_model = create_cube()
-		if widget == "locator_menu_btn":
+		if tde4.getWidgetValue(req,"locator_menu_btn") == 1:
 			new_model = create_locator()
 		tde4.set3DModelName(pg, new_model, name)
 		tde4.set3DModelColor(pg, new_model, color[0], color[1], color[2], color[3])
@@ -487,6 +516,7 @@ def model_shape_menu_callback(req, widget, action):
 		tde4.set3DModelVisibleFlag(pg, new_model, visibility)
 		tde4.set3DModelSnappingPoint(pg, new_model, snap_point)
 
+
 def close_btn_callback(req, widget, action):
 	tde4.unpostCustomRequester(req)
 
@@ -496,6 +526,7 @@ load_save_widgets = [("show_lines_rdo_box",1), ("show_polygons_rdo_box",1),
                      ("color_red_slider",1.0), ("color_green_slider",0.0), ("color_blue_slider",0.0), ("color_alpha_slider",1.0),
                      ("scale_x_txt_value",1.0), ("scale_y_txt_value",1.0), ("scale_z_txt_value",1.0),
                      ("rot_x_txt_value",0.0), ("rot_y_txt_value",0.0), ("rot_z_txt_value",0.0)]
+
 
 def load_save_gui_settings(req, operation):
 	pg	= tde4.getCurrentPGroup()
@@ -517,11 +548,24 @@ def load_save_gui_settings(req, operation):
 			prop_scale_rdo_toggle()
 	return
 
+
 def reset_ui_settings_callback(req, widget, action):
+	color_widgets = ["red_menu_btn", "green_menu_btn", "blue_menu_btn",
+	                 "yellow_menu_btn", "black_menu_btn", "white_menu_btn",
+					 "gray_menu_btn", "purple_menu_btn", "cyan_menu_btn"]
+	model_shape_widgets = ["box_cone_menu_btn", "round_cone_menu_btn", "cube_menu_btn", "locator_menu_btn"]
 	for i in range(len(load_save_widgets)):
 		tde4.setWidgetValue(req, load_save_widgets[i][0], str(load_save_widgets[i][1]))
+	for w in color_widgets:
+		tde4.setWidgetValue(req, w, str(0))
+	for w in model_shape_widgets:
+		tde4.setWidgetValue(req, w, str(0))
+	tde4.setWidgetValue(req, "red_menu_btn", str(1))
+	tde4.setWidgetValue(req, "box_cone_menu_btn", str(1))
+
 	prop_scale_rdo_toggle()
 	load_save_gui_settings(req, "save")
+
 
 # GUI
 req = tde4.createCustomRequester()
@@ -570,47 +614,47 @@ tde4.setWidgetOffsets(req,"color_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"color_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"color_menu",80,20)
 tde4.setWidgetBGColor(req,"color_menu",0.000000,0.000000,0.000000)
-tde4.addMenuButtonWidget(req,"red_menu_btn","Red","color_menu")
+tde4.addMenuToggleWidget(req,"red_menu_btn","Red","color_menu", 1)
 tde4.setWidgetOffsets(req,"red_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"red_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"red_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"red_menu_btn",1.000000,0.000000,0.000000)
-tde4.addMenuButtonWidget(req,"green_menu_btn","Green","color_menu")
+tde4.addMenuToggleWidget(req,"green_menu_btn","Green","color_menu")
 tde4.setWidgetOffsets(req,"green_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"green_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"green_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"green_menu_btn",0.000000,1.000000,0.000000)
-tde4.addMenuButtonWidget(req,"blue_menu_btn","Blue","color_menu")
+tde4.addMenuToggleWidget(req,"blue_menu_btn","Blue","color_menu")
 tde4.setWidgetOffsets(req,"blue_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"blue_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"blue_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"blue_menu_btn",0.000000,0.000000,1.000000)
-tde4.addMenuButtonWidget(req,"yellow_menu_btn","Yellow","color_menu")
+tde4.addMenuToggleWidget(req,"yellow_menu_btn","Yellow","color_menu")
 tde4.setWidgetOffsets(req,"yellow_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"yellow_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"yellow_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"yellow_menu_btn",1.000000,1.000000,0.000000)
-tde4.addMenuButtonWidget(req,"black_menu_btn","Black","color_menu")
+tde4.addMenuToggleWidget(req,"black_menu_btn","Black","color_menu")
 tde4.setWidgetOffsets(req,"black_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"black_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"black_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"black_menu_btn",0.000000,0.000000,0.000000)
-tde4.addMenuButtonWidget(req,"white_menu_btn","White","color_menu")
+tde4.addMenuToggleWidget(req,"white_menu_btn","White","color_menu")
 tde4.setWidgetOffsets(req,"white_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"white_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"white_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"white_menu_btn",1.000000,1.000000,1.000000)
-tde4.addMenuButtonWidget(req,"gray_menu_btn","Gray","color_menu")
+tde4.addMenuToggleWidget(req,"gray_menu_btn","Gray","color_menu")
 tde4.setWidgetOffsets(req,"gray_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"gray_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"gray_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"gray_menu_btn",0.500000,0.500000,0.500000)
-tde4.addMenuButtonWidget(req,"purple_menu_btn","Purple","color_menu")
+tde4.addMenuToggleWidget(req,"purple_menu_btn","Purple","color_menu")
 tde4.setWidgetOffsets(req,"purple_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"purple_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"purple_menu_btn",80,20)
 tde4.setWidgetFGColor(req,"purple_menu_btn",1.000000,0.000000,1.000000)
-tde4.addMenuButtonWidget(req,"cyan_menu_btn","Cyan","color_menu")
+tde4.addMenuToggleWidget(req,"cyan_menu_btn","Cyan","color_menu")
 tde4.setWidgetOffsets(req,"cyan_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"cyan_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"cyan_menu_btn",80,20)
@@ -631,19 +675,19 @@ tde4.addMenuWidget(req,"model_shape_menu","Model Shape","menu_bar",1)
 tde4.setWidgetOffsets(req,"model_shape_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"model_shape_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"model_shape_menu",80,20)
-tde4.addMenuButtonWidget(req,"box_cone_menu_btn","Box Cone","model_shape_menu")
+tde4.addMenuToggleWidget(req,"box_cone_menu_btn","Box Cone","model_shape_menu",1)
 tde4.setWidgetOffsets(req,"box_cone_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"box_cone_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"box_cone_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"round_cone_menu_btn","Round Cone","model_shape_menu")
+tde4.addMenuToggleWidget(req,"round_cone_menu_btn","Round Cone","model_shape_menu")
 tde4.setWidgetOffsets(req,"round_cone_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"round_cone_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"round_cone_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"cube_menu_btn","Cube","model_shape_menu")
+tde4.addMenuToggleWidget(req,"cube_menu_btn","Cube","model_shape_menu")
 tde4.setWidgetOffsets(req,"cube_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"cube_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"cube_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"locator_menu_btn","Locator","model_shape_menu")
+tde4.addMenuToggleWidget(req,"locator_menu_btn","Locator","model_shape_menu")
 tde4.setWidgetOffsets(req,"locator_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"locator_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"locator_menu_btn",80,20)
@@ -651,6 +695,9 @@ tde4.addMenuWidget(req,"presets_menu","Presets","menu_bar",1)
 tde4.setWidgetOffsets(req,"presets_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"presets_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"presets_menu",80,20)
+tde4.addMenuButtonWidget(req, "save_preset_menu_btn", "Save Current UI As Preset", "presets_menu")
+tde4.addMenuButtonWidget(req, "delete_preset_menu_btn", "Delete Current Preset", "presets_menu")
+tde4.addMenuSeparatorWidget(req, "", "presets_menu")
 tde4.addMenuWidget(req,"reset_menu","Reset","menu_bar",0)
 tde4.setWidgetOffsets(req,"reset_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"reset_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -809,7 +856,8 @@ tde4.setWidgetLinks(req,"close_btn","","","rot_y_txt_value","")
 load_save_gui_settings(req, "load")
 load_save_gui_settings(req, "save")
 
-# Load Presets from json
+
+# Presets
 def get_preset_names_from_json_file(file_path):
 	with open(file_path, "r") as f:
 		presets_data = json.load(f)
@@ -829,53 +877,87 @@ tde_path = HOME+"/.3dequalizer/"
 json_file_path = tde_path+JSON_FILE_NAME
 if not JSON_FILE_NAME in os.listdir(tde_path):
 	with open(json_file_path, "w") as f:
-		f.write("{}")
+		inital_data = {"active": None}
+		json.dump(inital_data, f, indent=2)
 else:
 	for preset in get_preset_names_from_json_file(json_file_path):
-		tde4.addMenuToggleWidget(req, str(preset)+"_menu_btn", str(preset), "presets_menu")		
-	tde4.addMenuSeparatorWidget(req, "", "presets_menu")
-	tde4.addMenuButtonWidget(req, "save_preset_menu_btn", "Save Current UI As Preset", "presets_menu")
-	tde4.addMenuButtonWidget(req, "delete_preset_menu_btn", "Delete Current Preset", "presets_menu")
-
-	
+		if not preset == "active":
+			tde4.addMenuToggleWidget(req, str(preset)+"_menu_btn", str(preset), "presets_menu")	
 
 
-def test(req, widget, action):
-	print (widget)
+def save_preset_to_json(preset_name):
+	with open(json_file_path, "r") as f:
+		presets_data = json.load(f)
+		presets_data[preset_name] = {}
+		for w in WIDGETS:
+			value = tde4.getWidgetValue(req, w)
+			presets_data[preset_name][w] = value
+	with open(json_file_path, "w") as f:
+		json.dump(presets_data, f, indent=2)
+	tde4.addMenuToggleWidget(req, str(preset_name)+"_menu_btn", str(preset_name), "presets_menu")
 
 
-tde4.setWidgetCallbackFunction(req, "presets_menu", "test")
+def load_preset_from_json(preset_name):
+	with open(json_file_path, "r") as f:
+		presets_data = json.load(f)
+		for w in WIDGETS:
+			value = presets_data[preset_name][w]
+			tde4.setWidgetValue(req, w, str(value))
+	presets_data["active"] = preset_name
+	with open(json_file_path, "w") as f:
+		json.dump(presets_data, f, indent=2)
 
 
+def presets_menu_callback(req, widget, action):
+	if widget == "save_preset_menu_btn":
+		save_presets_req = tde4.createCustomRequester()
+		tde4.addTextFieldWidget(save_presets_req, "save_preset_name", "Preset Name", "")
+		tde4.setWidgetOffsets(save_presets_req,"save_preset_name",100,10,5,0)
+		tde4.setWidgetAttachModes(save_presets_req,"save_preset_name","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+		tde4.setWidgetSize(save_presets_req,"save_preset_name",80,20) 
+		if tde4.postCustomRequester(save_presets_req, WINDOW_TITLE, 600, 100, "Ok", "Cancel") == 1:
+			name = tde4.getWidgetValue(save_presets_req, "save_preset_name")
+			if not name:				
+				return
+			if name in get_preset_names_from_json_file(json_file_path):
+				tde4.postQuestionRequester(WINDOW_TITLE, "Warning, Preset name already exists.", "Ok")
+				return
+			save_preset_to_json(name)
 
+	if widget == "delete_preset_menu_btn":
+		with open(json_file_path, "r") as f:
+			presets_data = json.load(f)	
+			preset = presets_data["active"]
+			if preset:
+				tde4.removeWidget(req, str(preset)+"_menu_btn")
+				del presets_data[preset]
+				presets_data["active"] = None
+		with open(json_file_path, "w") as f:
+			json.dump(presets_data, f, indent=2)
 
+	if not widget == "save_preset_menu_btn":
+		if not widget == "delete_preset_menu_btn":
+			preset_name = str(widget).replace("_menu_btn", "")
+			load_preset_from_json(preset_name)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			# Call callbacks
+			scale_callback(req, widget, action)
+			prop_scale_callback(req, widget, action)
+			color_menu_callback(req, widget, action)
+			model_shape_menu_callback(req, widget, action)
+			rendering_menu_callback(req, widget, action)
+			rotation_callback(req, widget, action)
 
 
 # Callbacks
 tde4.setWidgetCallbackFunction(req, "scale_slider", "scale_callback")
 tde4.setWidgetCallbackFunction(req, "scale_text_value", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "prop_scale_rdo_box", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "prop_scale_x_txt", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "prop_scale_y_txt", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "prop_scale_z_txt", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "scale_positive_btn", "scale_callback")
-tde4.setWidgetCallbackFunction(req, "scale_negative_btn", "scale_callback")
+tde4.setWidgetCallbackFunction(req, "prop_scale_rdo_box", "prop_scale_callback")
+tde4.setWidgetCallbackFunction(req, "prop_scale_x_txt", "prop_scale_callback")
+tde4.setWidgetCallbackFunction(req, "prop_scale_y_txt", "prop_scale_callback")
+tde4.setWidgetCallbackFunction(req, "prop_scale_z_txt", "prop_scale_callback")
+tde4.setWidgetCallbackFunction(req, "scale_positive_btn", "prop_scale_inc_dec_callback")
+tde4.setWidgetCallbackFunction(req, "scale_negative_btn", "prop_scale_inc_dec_callback")
 tde4.setWidgetCallbackFunction(req, "scale_x_txt_value", "scale_callback")
 tde4.setWidgetCallbackFunction(req, "scale_y_txt_value", "scale_callback")
 tde4.setWidgetCallbackFunction(req, "scale_z_txt_value", "scale_callback")
@@ -899,8 +981,7 @@ tde4.setWidgetCallbackFunction(req, "color_green_slider", "color_slider_callback
 tde4.setWidgetCallbackFunction(req, "color_blue_slider", "color_slider_callback")
 tde4.setWidgetCallbackFunction(req, "color_alpha_slider", "color_slider_callback")
 
-tde4.setWidgetCallbackFunction(req, "show_lines_rdo_box", "rendering_menu_callback")
-tde4.setWidgetCallbackFunction(req, "show_polygons_rdo_box", "rendering_menu_callback")
+tde4.setWidgetCallbackFunction(req, "rendering_menu", "rendering_menu_callback")
 
 tde4.setWidgetCallbackFunction(req, "model_shape_menu", "model_shape_menu_callback")
 
@@ -909,6 +990,8 @@ tde4.setWidgetCallbackFunction(req, "reset_ui_menu_btn", "reset_ui_settings_call
 tde4.setWidgetCallbackFunction(req, "create_btn", "create_models_callback")
 tde4.setWidgetCallbackFunction(req, "delete_extra_models_btn", "delete_extra_models_callback")
 tde4.setWidgetCallbackFunction(req, "delete_all_btn", "delete_all_models_callback")
+
+tde4.setWidgetCallbackFunction(req, "presets_menu", "presets_menu_callback")
 
 tde4.setWidgetCallbackFunction(req, "close_btn", "close_btn_callback")
 
