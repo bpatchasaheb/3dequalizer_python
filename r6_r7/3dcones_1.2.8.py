@@ -878,7 +878,7 @@ json_file_path = tde_path+JSON_FILE_NAME
 if not JSON_FILE_NAME in os.listdir(tde_path):
 	with open(json_file_path, "w") as f:
 		inital_data = {"active": None}
-		json.dump(inital_data, f, indent=2)
+		json.dump(inital_data, f, indent=2, sort_keys=True)
 else:
 	for preset in get_preset_names_from_json_file(json_file_path):
 		if not preset == "active":
@@ -893,7 +893,7 @@ def save_preset_to_json(preset_name):
 			value = tde4.getWidgetValue(req, w)
 			presets_data[preset_name][w] = value
 	with open(json_file_path, "w") as f:
-		json.dump(presets_data, f, indent=2)
+		json.dump(presets_data, f, indent=2, sort_keys=True)
 	tde4.addMenuToggleWidget(req, str(preset_name)+"_menu_btn", str(preset_name), "presets_menu")
 
 
@@ -905,7 +905,7 @@ def load_preset_from_json(preset_name):
 			tde4.setWidgetValue(req, w, str(value))
 	presets_data["active"] = preset_name
 	with open(json_file_path, "w") as f:
-		json.dump(presets_data, f, indent=2)
+		json.dump(presets_data, f, indent=2, sort_keys=True)
 
 
 def presets_menu_callback(req, widget, action):
@@ -933,7 +933,7 @@ def presets_menu_callback(req, widget, action):
 				del presets_data[preset]
 				presets_data["active"] = None
 		with open(json_file_path, "w") as f:
-			json.dump(presets_data, f, indent=2)
+			json.dump(presets_data, f, indent=2, sort_keys=True)	
 
 	if not widget == "save_preset_menu_btn":
 		if not widget == "delete_preset_menu_btn":
