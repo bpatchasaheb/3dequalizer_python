@@ -937,6 +937,10 @@ def presets_menu_callback(req, widget, action):
 
 	if not widget == "save_preset_menu_btn":
 		if not widget == "delete_preset_menu_btn":
+			if not get_all_model_list():
+				tde4.postQuestionRequester(WINDOW_TITLE, "Warning, No 3DCone models are found to apply Preset.", "Ok")
+				tde4.setWidgetValue(req, widget, str(0))
+				return
 			preset_name = str(widget).replace("_menu_btn", "")
 			load_preset_from_json(preset_name)
 
