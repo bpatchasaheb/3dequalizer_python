@@ -861,7 +861,9 @@ load_save_gui_settings(req, "save")
 def get_preset_names_from_json_file(file_path):
 	with open(file_path, "r") as f:
 		presets_data = json.load(f)
-		return [preset for preset in presets_data.keys()]
+		preset_names = [preset for preset in presets_data.keys()]
+		preset_names.sort()
+		return preset_names
 
 
 if ("linux" in sys.platform) or ("darwin" in sys.platform):
@@ -878,11 +880,11 @@ json_file_path = tde_path+JSON_FILE_NAME
 if not JSON_FILE_NAME in os.listdir(tde_path):
 	with open(json_file_path, "w") as f:
 		inital_data = {"active": None}
-		json.dump(inital_data, f, indent=2, sort_keys=True)
+		json.dump(inital_data, f, indent=2)
 else:
 	for preset in get_preset_names_from_json_file(json_file_path):
 		if not preset == "active":
-			tde4.addMenuToggleWidget(req, str(preset)+"_menu_btn", str(preset), "presets_menu")	
+			tde4.addMenuToggleWidget(req, "menu_btn_"+str(preset), str(preset), "presets_menu")	
 
 
 def save_preset_to_json(preset_name):
@@ -893,8 +895,8 @@ def save_preset_to_json(preset_name):
 			value = tde4.getWidgetValue(req, w)
 			presets_data[preset_name][w] = value
 	with open(json_file_path, "w") as f:
-		json.dump(presets_data, f, indent=2, sort_keys=True)
-	tde4.addMenuToggleWidget(req, str(preset_name)+"_menu_btn", str(preset_name), "presets_menu")
+		json.dump(presets_data, f, indent=2)
+	tde4.addMenuToggleWidget(req, "menu_btn_"+str(preset_name), str(preset_name), "presets_menu")
 
 
 def load_preset_from_json(preset_name):
@@ -905,7 +907,7 @@ def load_preset_from_json(preset_name):
 			tde4.setWidgetValue(req, w, str(value))
 	presets_data["active"] = preset_name
 	with open(json_file_path, "w") as f:
-		json.dump(presets_data, f, indent=2, sort_keys=True)
+		json.dump(presets_data, f, indent=2)
 
 
 def presets_menu_callback(req, widget, action):
@@ -928,12 +930,14 @@ def presets_menu_callback(req, widget, action):
 		with open(json_file_path, "r") as f:
 			presets_data = json.load(f)	
 			preset = presets_data["active"]
-			if preset:
-				tde4.removeWidget(req, str(preset)+"_menu_btn")
-				del presets_data[preset]
-				presets_data["active"] = None
+			if not preset:
+				tde4.postQuestionRequester(WINDOW_TITLE, "Warning, No active Preset found to delete.", "Ok")
+				return
+			tde4.removeWidget(req, "menu_btn_"+str(preset))
+			del presets_data[preset]
+			presets_data["active"] = None			
 		with open(json_file_path, "w") as f:
-			json.dump(presets_data, f, indent=2, sort_keys=True)	
+			json.dump(presets_data, f, indent=2)
 
 	if not widget == "save_preset_menu_btn":
 		if not widget == "delete_preset_menu_btn":
@@ -941,7 +945,7 @@ def presets_menu_callback(req, widget, action):
 				tde4.postQuestionRequester(WINDOW_TITLE, "Warning, No 3D Cone models are found to apply Preset.", "Ok")
 				tde4.setWidgetValue(req, widget, str(0))
 				return
-			preset_name = str(widget).replace("_menu_btn", "")
+			preset_name = str(widget).replace("menu_btn_", "")
 			load_preset_from_json(preset_name)
 
 			# Call callbacks
