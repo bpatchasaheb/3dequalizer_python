@@ -12,17 +12,20 @@
 
 import json
 from vl_sdv import*
+import tde4
 
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
-PERSISTENT_STRING_NAME = "PATCHA_3DE_ANIMATION_LAYERS_DATA"
+PREFERENCES_WINDOW_TITLE = "3DE Animation Layers Preferences"
+PERSISTENT_STRING_NAME = "PATCHA-3DE-ANIMATION-LAYERS-DATA"
 SPACE_MULTIPLIER = 10
 CURVE_NAMES = ["Pos X", "Pos Y", "Pos Z", "Rot X", "Rot Y", "Rot Z", "Weight"]
 CURVE_COLORS = [(0.812,0.277,0.257),(0.441,0.816,0.354),(0.422,0.408,0.820),
                 (0.453,0.815,0.809),(0.855,0.272,0.816),(0.819,0.812,0.387),
                 (0.583,0.584,0.144)] 
+TIMELINE_KEY_COLOR = [0.0, 1.0, 1.0, 0.3]
 EDIT_CURVES_LIST = ["TX_CURVE", "TY_CURVE", "TZ_CURVE",
                     "RX_CURVE", "RY_CURVE", "RZ_CURVE"]
 AXES = ["position_x", "position_y", "position_z",
@@ -47,11 +50,11 @@ tde4.addOptionMenuWidget(req,"pg_option_menu_wdgt","","temp")
 tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,25,0)
 tde4.setWidgetAttachModes(req,"pg_option_menu_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"pg_option_menu_wdgt",150,20)
-tde4.addMenuBarWidget(req,"w006")
-tde4.setWidgetOffsets(req,"w006",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w006","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w006",300,20)
-tde4.addMenuWidget(req,"layers_menu_wdgt","Layers","w006",0)
+tde4.addMenuBarWidget(req,"menu_bar")
+tde4.setWidgetOffsets(req,"menu_bar",0,0,0,0)
+tde4.setWidgetAttachModes(req,"menu_bar","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"menu_bar",300,20)
+tde4.addMenuWidget(req,"layers_menu_wdgt","Layers","menu_bar",0)
 tde4.setWidgetOffsets(req,"layers_menu_wdgt",0,0,0,0)
 tde4.setWidgetAttachModes(req,"layers_menu_wdgt","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"layers_menu_wdgt",80,20)
@@ -103,7 +106,7 @@ tde4.addMenuButtonWidget(req,"expand_all_menu_btn","Expand All Layers","layers_m
 tde4.setWidgetOffsets(req,"expand_all_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"expand_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"expand_all_menu_btn",80,20)
-tde4.addMenuWidget(req,"keys_menu","Keys","w006",0)
+tde4.addMenuWidget(req,"keys_menu","Keys","menu_bar",0)
 tde4.setWidgetOffsets(req,"keys_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"keys_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"keys_menu",80,20)
@@ -119,14 +122,6 @@ tde4.addMenuSeparatorWidget(req,"w056","keys_menu")
 tde4.setWidgetOffsets(req,"w056",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w056","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"w056",80,20)
-tde4.addMenuButtonWidget(req,"jump_prev_key_menu_btn","Jump to Previous Key","keys_menu")
-tde4.setWidgetOffsets(req,"jump_prev_key_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"jump_prev_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"jump_prev_key_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"jump_next_key_menu_btn","Jump to Next Key","keys_menu")
-tde4.setWidgetOffsets(req,"jump_next_key_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"jump_next_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"jump_next_key_menu_btn",80,20)
 tde4.addMenuSeparatorWidget(req,"w060","keys_menu")
 tde4.setWidgetOffsets(req,"w060",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w060","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -147,7 +142,7 @@ tde4.addMenuToggleWidget(req,"auto_key_menu_toggle_btn","Auto Key","keys_menu",1
 tde4.setWidgetOffsets(req,"auto_key_menu_toggle_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"auto_key_menu_toggle_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"auto_key_menu_toggle_btn",80,20)
-tde4.addMenuWidget(req,"objpg_menu","ObjectPG","w006",0)
+tde4.addMenuWidget(req,"objpg_menu","ObjectPG","menu_bar",0)
 tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"objpg_menu",80,20)
@@ -155,6 +150,14 @@ tde4.addMenuToggleWidget(req,"update_objpg_menu_btn","Update ObjectPG along with
 tde4.setWidgetOffsets(req,"update_objpg_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"update_objpg_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"update_objpg_menu_btn",80,20)
+tde4.addMenuWidget(req,"pref_menu","Preferences","menu_bar",0)
+tde4.setWidgetOffsets(req,"pref_menu",0,0,0,0)
+tde4.setWidgetAttachModes(req,"pref_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"pref_menu",80,20)
+tde4.addMenuButtonWidget(req,"show_pref_menu_btn","Show Preferences...","pref_menu")
+tde4.setWidgetOffsets(req,"show_pref_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"show_pref_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"show_pref_menu_btn",80,20)
 tde4.addToggleWidget(req,"auto_view_all_toggle_btn","Auto View All",1)
 tde4.setWidgetOffsets(req,"auto_view_all_toggle_btn",0,10,5,0)
 tde4.setWidgetAttachModes(req,"auto_view_all_toggle_btn","ATTACH_NONE","ATTACH_WIDGET","ATTACH_WIDGET","ATTACH_NONE")
@@ -163,14 +166,10 @@ tde4.addButtonWidget(req,"view_all_btn","View All")
 tde4.setWidgetOffsets(req,"view_all_btn",0,300,5,0)
 tde4.setWidgetAttachModes(req,"view_all_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"view_all_btn",80,20)
-tde4.addButtonWidget(req,"create_key_btn","Create Key")
-tde4.setWidgetOffsets(req,"create_key_btn",0,10,7,0)
-tde4.setWidgetAttachModes(req,"create_key_btn","ATTACH_NONE","ATTACH_WIDGET","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"create_key_btn",120,20)
 tde4.addButtonWidget(req,"update_viewport_btn","Update Viewport")
-tde4.setWidgetOffsets(req,"update_viewport_btn",0,7,7,0)
+tde4.setWidgetOffsets(req,"update_viewport_btn",0,160,7,0)
 tde4.setWidgetAttachModes(req,"update_viewport_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"update_viewport_btn",145,20)
+tde4.setWidgetSize(req,"update_viewport_btn",125,20)
 tde4.addScaleWidget(req,"weight_slider_wdgt","Weight","DOUBLE",0.0,1.0,1.0)
 tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,60,36,0)
 tde4.setWidgetAttachModes(req,"weight_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
@@ -191,19 +190,38 @@ tde4.addButtonWidget(req,"tween_reset_btn","R")
 tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
 tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"tween_reset_btn",30,20)
+tde4.addButtonWidget(req,"w083","|<<")
+tde4.setWidgetOffsets(req,"w083",11,167,7,0)
+tde4.setWidgetAttachModes(req,"w083","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w083",33,20)
+tde4.addButtonWidget(req,"w084","<")
+tde4.setWidgetOffsets(req,"w084",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w084","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w084",27,20)
+tde4.addButtonWidget(req,"w085",">")
+tde4.setWidgetOffsets(req,"w085",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w085","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w085",27,20)
+tde4.addButtonWidget(req,"w086",">>|")
+tde4.setWidgetOffsets(req,"w086",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w086","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w086",33,20)
 tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
 tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
 tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
-tde4.setWidgetLinks(req,"w006","","","","")
+tde4.setWidgetLinks(req,"menu_bar","","","","")
 tde4.setWidgetLinks(req,"auto_view_all_toggle_btn","","view_all_btn","curve_area_wdgt","")
 tde4.setWidgetLinks(req,"view_all_btn","","","curve_area_wdgt","")
-tde4.setWidgetLinks(req,"create_key_btn","","update_viewport_btn","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"update_viewport_btn","","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
+tde4.setWidgetLinks(req,"w083","update_viewport_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w084","w083","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w085","w084","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w086","w085","","layers_list_wdgt","")
 
 cam = tde4.getCurrentCamera()
 frame_offset = tde4.getCameraFrameOffset(cam)
@@ -538,6 +556,8 @@ def layer_item_callback(req, widget, action):
                 save_data(data)
     # Set layer colors
     set_layer_colors()
+    # Show timeline keys
+    show_timeline_keys_helper()
     # Auto view all
     if tde4.getWidgetValue(req, "auto_view_all_toggle_btn") == 1:
         view_all_helper() 
@@ -694,7 +714,29 @@ def get_curves_by_layer_name(layer_name):
         curve_id = label.split("-")[1]
         curve_ids.append(curve_id)
     return curve_ids
-        
+
+
+def show_timeline_keys_helper():
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()
+    data = load_data()
+    active_layer = get_active_layer()
+    if not active_layer:
+        tde4.deleteAllFrameSliderMarks()
+        return
+    axis = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer][AXES[0]] 
+    tde4.deleteAllFrameSliderMarks()
+    for frame in axis.keys():   
+        tde4.addFrameSliderMark(int(frame), int(frame), TIMELINE_KEY_COLOR[0],
+           TIMELINE_KEY_COLOR[1], TIMELINE_KEY_COLOR[2], TIMELINE_KEY_COLOR[3])
+
+
+def show_timeline_keys_callback(req, widget, action):
+    if tde4.getWidgetValue(req, "show_timeline_keys_menu_btn") == 1:
+        show_timeline_keys_helper()
+    else:
+        tde4.deleteAllFrameSliderMarks()
+
 
 def create_key_helper():
     cam = tde4.getCurrentCamera()
@@ -715,6 +757,9 @@ def create_key_helper():
         # Update layers data
         data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
     save_data(data)
+    # Show timeline keys
+    show_timeline_keys_helper()
+
 
 
 def create_key_callback(req, widget, action):
@@ -725,14 +770,18 @@ def option_menu_helper():
     count = tde4.getWidgetValue(req, "pg_option_menu_wdgt")
     pg_list = tde4.getPGroupList(0)
     tde4.setCurrentPGroup(pg_list[count-1])
+    [tde4.setPGroupSelectionFlag(i,0) for i in pg_list]
+
+    pg = tde4.getCurrentPGroup()
+    cam = tde4.getCurrentCamera()
+    frames = tde4.getCameraNoFrames(cam) 
+    tde4.setPGroupSelectionFlag(pg, 1)
+
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id() 
 
     tde4.removeAllListWidgetItems(req, "layers_list_wdgt")
     tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")
-
-    cam = tde4.getCurrentCamera()
-    frames = tde4.getCameraNoFrames(cam) 
-    cam_pers_id = get_cam_pers_id()
-    pg_pers_id = get_pg_pers_id()       
 
     if frames > 0:
         # Bake post filtered buffer curves
@@ -772,20 +821,108 @@ def option_menu_helper():
         # Set layer colors
         set_layer_colors()
 
+        # Show timeline keys
+        show_timeline_keys_helper()
+
 
 def option_menu_callback(req, widget, action):
     option_menu_helper()
 
 
+pref_req = tde4.createCustomRequester()
+tde4.addLabelWidget(pref_req,"pref_timeline_keys_color_label","Timeline Keys Color","ALIGN_LABEL_CENTER")
+tde4.setWidgetOffsets(pref_req,"pref_timeline_keys_color_label",20,80,10,0)
+tde4.setWidgetAttachModes(pref_req,"pref_timeline_keys_color_label","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_timeline_keys_color_label",200,20)
+tde4.addScaleWidget(pref_req,"pref_key_red_slider_wdgt","Red","DOUBLE",0.0,1.0,0.216)
+tde4.setWidgetOffsets(pref_req,"pref_key_red_slider_wdgt",15,95,10,0)
+tde4.setWidgetAttachModes(pref_req,"pref_key_red_slider_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_key_red_slider_wdgt",200,20)
+tde4.addScaleWidget(pref_req,"pref_key_green_slider_wdgt","Green","DOUBLE",0.0,1.0,0.624)
+tde4.setWidgetOffsets(pref_req,"pref_key_green_slider_wdgt",15,95,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_key_green_slider_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_key_green_slider_wdgt",200,20)
+tde4.addScaleWidget(pref_req,"pref_key_blue_slider_wdgt","Blue","DOUBLE",0.0,1.0,0.588)
+tde4.setWidgetOffsets(pref_req,"pref_key_blue_slider_wdgt",15,95,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_key_blue_slider_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_key_blue_slider_wdgt",200,20)
+tde4.addScaleWidget(pref_req,"pref_key_alpha_slider_wdgt","Alpha","DOUBLE",0.0,1.0,0.75)
+tde4.setWidgetOffsets(pref_req,"pref_key_alpha_slider_wdgt",15,95,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_key_alpha_slider_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_key_alpha_slider_wdgt",200,20)
+tde4.addOptionMenuWidget(pref_req,"pref_show_timeline_keys_optmenu_wdgt","Show Timeline Keys","On","Off")
+tde4.setWidgetOffsets(pref_req,"pref_show_timeline_keys_optmenu_wdgt",32,52,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_show_timeline_keys_optmenu_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_show_timeline_keys_optmenu_wdgt",80,20)
+tde4.addOptionMenuWidget(pref_req,"pref_auto_key_optmenu_wdgt","Auto Key","On","Off")
+tde4.setWidgetOffsets(pref_req,"pref_auto_key_optmenu_wdgt",115,95,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_auto_key_optmenu_wdgt","ATTACH_WIDGET","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_auto_key_optmenu_wdgt",150,20)
+tde4.addSeparatorWidget(pref_req,"w010")
+tde4.setWidgetOffsets(pref_req,"w010",1,99,5,0)
+tde4.setWidgetAttachModes(pref_req,"w010","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"w010",200,20)
+tde4.addOptionMenuWidget(pref_req,"pref_auto_viewall_optmenu_wdgt","Auto View All","On","Off")
+tde4.setWidgetOffsets(pref_req,"pref_auto_viewall_optmenu_wdgt",47,67,5,0)
+tde4.setWidgetAttachModes(pref_req,"pref_auto_viewall_optmenu_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_auto_viewall_optmenu_wdgt",150,20)
+tde4.addSeparatorWidget(pref_req,"w018")
+tde4.setWidgetOffsets(pref_req,"w018",1,99,5,0)
+tde4.setWidgetAttachModes(pref_req,"w018","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"w018",200,20)
+tde4.addLabelWidget(pref_req,"pref_widow_dim_label_wdgt","Window Dimensions","ALIGN_LABEL_CENTER")
+tde4.setWidgetOffsets(pref_req,"pref_widow_dim_label_wdgt",20,80,5,0)
+tde4.setWidgetAttachModes(pref_req,"pref_widow_dim_label_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_widow_dim_label_wdgt",180,20)
+tde4.addTextFieldWidget(pref_req,"pref_window_width_txt_wdgt","Width px","1000")
+tde4.setWidgetOffsets(pref_req,"pref_window_width_txt_wdgt",17,45,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_window_width_txt_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_window_width_txt_wdgt",200,20)
+tde4.addTextFieldWidget(pref_req,"pref_window_height_txt_wdgt","Height px","700")
+tde4.setWidgetOffsets(pref_req,"pref_window_height_txt_wdgt",103,95,15,0)
+tde4.setWidgetAttachModes(pref_req,"pref_window_height_txt_wdgt","ATTACH_WIDGET","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_window_height_txt_wdgt",200,20)
+tde4.addSeparatorWidget(pref_req,"w022")
+tde4.setWidgetOffsets(pref_req,"w022",1,99,5,0)
+tde4.setWidgetAttachModes(pref_req,"w022","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"w022",200,20)
+tde4.addButtonWidget(pref_req,"pref_reset_btn_wdgt","Reset Preferences")
+tde4.setWidgetOffsets(pref_req,"pref_reset_btn_wdgt",30,70,5,0)
+tde4.setWidgetAttachModes(pref_req,"pref_reset_btn_wdgt","ATTACH_POSITION","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(pref_req,"pref_reset_btn_wdgt",80,20)
+tde4.setWidgetLinks(pref_req,"pref_timeline_keys_color_label","","","","")
+tde4.setWidgetLinks(pref_req,"pref_key_red_slider_wdgt","","","pref_timeline_keys_color_label","")
+tde4.setWidgetLinks(pref_req,"pref_key_green_slider_wdgt","","","pref_key_red_slider_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_key_blue_slider_wdgt","","","pref_key_green_slider_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_key_alpha_slider_wdgt","","","pref_key_blue_slider_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_show_timeline_keys_optmenu_wdgt","","","pref_key_alpha_slider_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_auto_key_optmenu_wdgt","pref_show_timeline_keys_optmenu_wdgt","","pref_key_alpha_slider_wdgt","")
+tde4.setWidgetLinks(pref_req,"w010","","","pref_show_timeline_keys_optmenu_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_auto_viewall_optmenu_wdgt","","","w010","")
+tde4.setWidgetLinks(pref_req,"w018","","","pref_auto_viewall_optmenu_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_widow_dim_label_wdgt","","","w018","")
+tde4.setWidgetLinks(pref_req,"pref_window_width_txt_wdgt","","","pref_widow_dim_label_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_window_height_txt_wdgt","pref_window_width_txt_wdgt","","pref_widow_dim_label_wdgt","")
+tde4.setWidgetLinks(pref_req,"w022","","","pref_window_width_txt_wdgt","")
+tde4.setWidgetLinks(pref_req,"pref_reset_btn_wdgt","","","w022","")
 
-def test(req, widget, action):
-    cam_pers_id = get_cam_pers_id()
-    pg_pers_id = get_pg_pers_id() 
-    data = load_data()
+# Preferences requester callbacks
+tde4.setWidgetCallbackFunction(pref_req, "pref_key_red_slider_wdgt", "red_callback")
 
-    print data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["position"]
-    print data[str(cam_pers_id)][str(pg_pers_id)]["bake"]["rotation"]   
 
+    
+
+
+
+def show_preferences_callback(req, widget, action):
+    tde4.postCustomRequesterAndContinue(pref_req, PREFERENCES_WINDOW_TITLE, 500, 400)
+
+    
+
+
+def red_callback(req, widget, action):
+    print tde4.getWidgetValue(pref_req, "pref_key_red_slider_wdgt")
+    print tde4.getWidgetValue(pref_req, "pref_key_green_slider_wdgt")
 
 # Show pgroup names in option menu
 frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
@@ -809,11 +946,12 @@ tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callb
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
-tde4.setWidgetCallbackFunction(req, "create_key_btn", "create_key_callback")
+tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
+tde4.setWidgetCallbackFunction(req, "show_timeline_keys_menu_btn", "show_timeline_keys_callback")
 
 
+tde4.setWidgetCallbackFunction(req, "show_pref_menu_btn", "show_preferences_callback")
 
-tde4.setWidgetCallbackFunction(req, "update_viewport_btn", "test")
 
 
 
