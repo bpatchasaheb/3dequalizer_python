@@ -10,10 +10,12 @@
 # Patcha Saheb(patchasaheb@gmail.com)
 # October 07 2021(Montreal)
 
+import os, sys
 import json
 from vl_sdv import*
 import tde4
 
+PREFERENCES_FILE_NAME = "patcha_3de_animation_layers_preferences.json"
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
@@ -36,196 +38,9 @@ MUTE_LAYER_COLOR = [1.0, 1.0, 0.0]
 NEW_LAYER_NAME = "AnimLayer"
 
 
-# GUI
-req = tde4.createCustomRequester()
-tde4.addListWidget(req,"layers_list_wdgt","",1)
-tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,50,90)
-tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW")
-tde4.setWidgetSize(req,"layers_list_wdgt",280,150)
-tde4.addCurveAreaWidget(req,"curve_area_wdgt","")
-tde4.setWidgetOffsets(req,"curve_area_wdgt",5,5,25,30)
-tde4.setWidgetAttachModes(req,"curve_area_wdgt","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW")
-tde4.setWidgetSize(req,"curve_area_wdgt",150,150)
-tde4.addOptionMenuWidget(req,"pg_option_menu_wdgt","","temp")
-tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,25,0)
-tde4.setWidgetAttachModes(req,"pg_option_menu_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"pg_option_menu_wdgt",150,20)
-tde4.addMenuBarWidget(req,"menu_bar")
-tde4.setWidgetOffsets(req,"menu_bar",0,0,0,0)
-tde4.setWidgetAttachModes(req,"menu_bar","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"menu_bar",300,20)
-tde4.addMenuWidget(req,"layers_menu_wdgt","Layers","menu_bar",0)
-tde4.setWidgetOffsets(req,"layers_menu_wdgt",0,0,0,0)
-tde4.setWidgetAttachModes(req,"layers_menu_wdgt","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"layers_menu_wdgt",80,20)
-tde4.addMenuButtonWidget(req,"create_empty_layer_menu_btn","Create Empty Layer","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"create_empty_layer_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"create_empty_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"create_empty_layer_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"rename_layer_menu_btn","Rename Layer","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"rename_layer_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"rename_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"rename_layer_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w015","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"w015",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w015","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w015",80,20)
-tde4.addMenuButtonWidget(req,"del_layers_menu_btn","Delete Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"del_layers_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"del_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"del_layers_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w018","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"w018",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w018","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w018",80,20)
-tde4.addMenuButtonWidget(req,"mute_layers_menu_btn","Mute Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"mute_layers_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"mute_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"mute_layers_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"unmute_layers_menu_btn","Unmute Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"unmute_layers_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"unmute_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"unmute_layers_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w021","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"w021",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w021","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w021",80,20)
-tde4.addMenuButtonWidget(req,"merge_layers_menu_btn","Merge Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"merge_layers_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"merge_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"merge_layers_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w045","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"w045",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w045","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w045",80,20)
-tde4.addMenuButtonWidget(req,"collapse_all_menu_btn","Collapse All Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"collapse_all_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"collapse_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"collapse_all_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"expand_all_menu_btn","Expand All Layers","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"expand_all_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"expand_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"expand_all_menu_btn",80,20)
-tde4.addMenuWidget(req,"keys_menu","Keys","menu_bar",0)
-tde4.setWidgetOffsets(req,"keys_menu",0,0,0,0)
-tde4.setWidgetAttachModes(req,"keys_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"keys_menu",80,20)
-tde4.addMenuButtonWidget(req,"create_key_menu_btn","Create Key","keys_menu")
-tde4.setWidgetOffsets(req,"create_key_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"create_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"create_key_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"delete_key_menu_btn","Delete Key","keys_menu")
-tde4.setWidgetOffsets(req,"delete_key_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"delete_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"delete_key_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w056","keys_menu")
-tde4.setWidgetOffsets(req,"w056",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w056","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w056",80,20)
-tde4.addMenuSeparatorWidget(req,"w060","keys_menu")
-tde4.setWidgetOffsets(req,"w060",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w060","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w060",80,20)
-tde4.addMenuButtonWidget(req,"create_zero_key_menu_btn","Create Zero Key","keys_menu")
-tde4.setWidgetOffsets(req,"create_zero_key_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"create_zero_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"create_zero_key_menu_btn",80,20)
-tde4.addMenuSeparatorWidget(req,"w071","keys_menu")
-tde4.setWidgetOffsets(req,"w071",0,0,0,0)
-tde4.setWidgetAttachModes(req,"w071","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"w071",80,20)
-tde4.addMenuToggleWidget(req,"show_timeline_keys_menu_btn","Show Timeline Keys","keys_menu",1)
-tde4.setWidgetOffsets(req,"show_timeline_keys_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"show_timeline_keys_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"show_timeline_keys_menu_btn",80,20)
-tde4.addMenuToggleWidget(req,"auto_key_menu_toggle_btn","Auto Key","keys_menu",1)
-tde4.setWidgetOffsets(req,"auto_key_menu_toggle_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"auto_key_menu_toggle_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"auto_key_menu_toggle_btn",80,20)
-tde4.addMenuWidget(req,"objpg_menu","ObjectPG","menu_bar",0)
-tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
-tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"objpg_menu",80,20)
-tde4.addMenuToggleWidget(req,"update_objpg_menu_btn","Update ObjectPG along with Camera","objpg_menu",1)
-tde4.setWidgetOffsets(req,"update_objpg_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"update_objpg_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"update_objpg_menu_btn",80,20)
-tde4.addMenuWidget(req,"pref_menu","Preferences","menu_bar",0)
-tde4.setWidgetOffsets(req,"pref_menu",0,0,0,0)
-tde4.setWidgetAttachModes(req,"pref_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"pref_menu",80,20)
-tde4.addMenuButtonWidget(req,"show_pref_menu_btn","Show Preferences...","pref_menu")
-tde4.setWidgetOffsets(req,"show_pref_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"show_pref_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"show_pref_menu_btn",80,20)
-tde4.addToggleWidget(req,"auto_view_all_toggle_btn","Auto View All",1)
-tde4.setWidgetOffsets(req,"auto_view_all_toggle_btn",0,10,5,0)
-tde4.setWidgetAttachModes(req,"auto_view_all_toggle_btn","ATTACH_NONE","ATTACH_WIDGET","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"auto_view_all_toggle_btn",20,20)
-tde4.addButtonWidget(req,"view_all_btn","View All")
-tde4.setWidgetOffsets(req,"view_all_btn",0,300,5,0)
-tde4.setWidgetAttachModes(req,"view_all_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"view_all_btn",80,20)
-tde4.addButtonWidget(req,"update_viewport_btn","Update Viewport")
-tde4.setWidgetOffsets(req,"update_viewport_btn",0,160,7,0)
-tde4.setWidgetAttachModes(req,"update_viewport_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"update_viewport_btn",125,20)
-tde4.addScaleWidget(req,"weight_slider_wdgt","Weight","DOUBLE",0.0,1.0,1.0)
-tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,60,36,0)
-tde4.setWidgetAttachModes(req,"weight_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"weight_slider_wdgt",200,20)
-tde4.addButtonWidget(req,"weight_key_btn","K")
-tde4.setWidgetOffsets(req,"weight_key_btn",5,35,36,0)
-tde4.setWidgetAttachModes(req,"weight_key_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"weight_key_btn",30,20)
-tde4.addButtonWidget(req,"weight_key_delete_btn","D")
-tde4.setWidgetOffsets(req,"weight_key_delete_btn",32,5,36,0)
-tde4.setWidgetAttachModes(req,"weight_key_delete_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"weight_key_delete_btn",30,20)
-tde4.addScaleWidget(req,"tween_slider_wdgt","Tween","DOUBLE",-1.0,1.0,0.0)
-tde4.setWidgetOffsets(req,"tween_slider_wdgt",52,35,64,0)
-tde4.setWidgetAttachModes(req,"tween_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"tween_slider_wdgt",200,20)
-tde4.addButtonWidget(req,"tween_reset_btn","R")
-tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
-tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"tween_reset_btn",30,20)
-tde4.addButtonWidget(req,"w083","|<<")
-tde4.setWidgetOffsets(req,"w083",11,167,7,0)
-tde4.setWidgetAttachModes(req,"w083","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w083",33,20)
-tde4.addButtonWidget(req,"w084","<")
-tde4.setWidgetOffsets(req,"w084",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w084","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w084",27,20)
-tde4.addButtonWidget(req,"w085",">")
-tde4.setWidgetOffsets(req,"w085",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w085","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w085",27,20)
-tde4.addButtonWidget(req,"w086",">>|")
-tde4.setWidgetOffsets(req,"w086",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w086","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w086",33,20)
-tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
-tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
-tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
-tde4.setWidgetLinks(req,"menu_bar","","","","")
-tde4.setWidgetLinks(req,"auto_view_all_toggle_btn","","view_all_btn","curve_area_wdgt","")
-tde4.setWidgetLinks(req,"view_all_btn","","","curve_area_wdgt","")
-tde4.setWidgetLinks(req,"update_viewport_btn","","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"weight_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
-tde4.setWidgetLinks(req,"w083","update_viewport_btn","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w084","w083","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w085","w084","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w086","w085","","layers_list_wdgt","")
 
-cam = tde4.getCurrentCamera()
-frame_offset = tde4.getCameraFrameOffset(cam)
-tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt", frame_offset-1)
+
+
 
 
 def get_cam_pers_id():
@@ -766,7 +581,7 @@ def create_key_callback(req, widget, action):
     create_key_helper()
 
 
-def option_menu_helper():   
+def pg_option_menu_helper():   
     count = tde4.getWidgetValue(req, "pg_option_menu_wdgt")
     pg_list = tde4.getPGroupList(0)
     tde4.setCurrentPGroup(pg_list[count-1])
@@ -783,52 +598,254 @@ def option_menu_helper():
     tde4.removeAllListWidgetItems(req, "layers_list_wdgt")
     tde4.detachCurveAreaWidgetAllCurves(req, "curve_area_wdgt")
 
-    if frames > 0:
-        # Bake post filtered buffer curves
-        snap_edit_to_filtered_curves()
+    # Bake post filtered buffer curves
+    snap_edit_to_filtered_curves()
 
-        # Handle persistent string
-        if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
-            data = {}
-            save_data(data)
-            insert_inital_data(True, False)
-        else:
-            # If cam_pers_id does not exist
-            data = load_data()
-            if not str(cam_pers_id) in data.keys():
-                insert_inital_data(True, False)
-
-            # If pg_pers_id does not exist
-            data = load_data()
-            if not str(pg_pers_id) in data[str(cam_pers_id)].keys():
-                insert_inital_data(False, True)    
-
-        # Create curve set
-        # Check frames count and bake data before creating curves
+    # Handle persistent string
+    if tde4.getPersistentString(PERSISTENT_STRING_NAME) == None:
+        data = {}
+        save_data(data)
+        insert_inital_data(True, False)
+    else:
+        # If cam_pers_id does not exist
         data = load_data()
-        is_frame_count_changed = False
-        if not int(data[str(cam_pers_id)][str(pg_pers_id)]["frames_count"]) == frames:
-            is_frame_count_changed = True
-
-        if is_frame_count_changed == False and is_pg_animation_changed() == False:
-            layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
-            for layer_name in layers_order:
-                create_curve_set(layer_name)
-        else:
+        if not str(cam_pers_id) in data.keys():
             insert_inital_data(True, False)
-            create_curve_set("BaseAnimation")
 
-        # Set layer colors
-        set_layer_colors()
+        # If pg_pers_id does not exist
+        data = load_data()
+        if not str(pg_pers_id) in data[str(cam_pers_id)].keys():
+            insert_inital_data(False, True)    
 
-        # Show timeline keys
-        show_timeline_keys_helper()
+    # Create curve set
+    # Check frames count and bake data before creating curves
+    data = load_data()
+    is_frame_count_changed = False
+    if not int(data[str(cam_pers_id)][str(pg_pers_id)]["frames_count"]) == frames:
+        is_frame_count_changed = True
+
+    if is_frame_count_changed == False and is_pg_animation_changed() == False:
+        layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
+        for layer_name in layers_order:
+            create_curve_set(layer_name)
+    else:
+        insert_inital_data(True, False)
+        create_curve_set("BaseAnimation")
+
+    # Set layer colors
+    set_layer_colors()
+
+    # Show timeline keys
+    show_timeline_keys_helper()
 
 
-def option_menu_callback(req, widget, action):
-    option_menu_helper()
+def pg_option_menu_callback(req, widget, action):
+    pg_option_menu_helper()
 
 
+def show_preferences_callback(req, widget, action):
+    tde4.postCustomRequesterAndContinue(pref_req, PREFERENCES_WINDOW_TITLE, 500, 400)    
+
+
+def red_callback(req, widget, action):
+    print tde4.getWidgetValue(pref_req, "pref_key_red_slider_wdgt")
+    print tde4.getWidgetValue(pref_req, "pref_key_green_slider_wdgt")    
+
+
+# Main GUI
+frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
+
+req = tde4.createCustomRequester()
+tde4.addListWidget(req,"layers_list_wdgt","",1)
+tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,50,90)
+tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW")
+tde4.setWidgetSize(req,"layers_list_wdgt",280,150)
+tde4.addCurveAreaWidget(req,"curve_area_wdgt","")
+tde4.setWidgetOffsets(req,"curve_area_wdgt",5,5,25,30)
+tde4.setWidgetAttachModes(req,"curve_area_wdgt","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW")
+tde4.setWidgetSize(req,"curve_area_wdgt",150,150)
+tde4.addOptionMenuWidget(req,"pg_option_menu_wdgt","","temp")
+tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,25,0)
+tde4.setWidgetAttachModes(req,"pg_option_menu_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"pg_option_menu_wdgt",150,20)
+tde4.addMenuBarWidget(req,"menu_bar")
+tde4.setWidgetOffsets(req,"menu_bar",0,0,0,0)
+tde4.setWidgetAttachModes(req,"menu_bar","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"menu_bar",300,20)
+tde4.addMenuWidget(req,"layers_menu_wdgt","Layers","menu_bar",0)
+tde4.setWidgetOffsets(req,"layers_menu_wdgt",0,0,0,0)
+tde4.setWidgetAttachModes(req,"layers_menu_wdgt","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"layers_menu_wdgt",80,20)
+tde4.addMenuButtonWidget(req,"create_empty_layer_menu_btn","Create Empty Layer","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"create_empty_layer_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"create_empty_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"create_empty_layer_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"rename_layer_menu_btn","Rename Layer","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"rename_layer_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"rename_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"rename_layer_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w015","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"w015",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w015","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w015",80,20)
+tde4.addMenuButtonWidget(req,"del_layers_menu_btn","Delete Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"del_layers_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"del_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"del_layers_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w018","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"w018",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w018","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w018",80,20)
+tde4.addMenuButtonWidget(req,"mute_layers_menu_btn","Mute Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"mute_layers_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"mute_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"mute_layers_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"unmute_layers_menu_btn","Unmute Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"unmute_layers_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"unmute_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"unmute_layers_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w021","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"w021",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w021","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w021",80,20)
+tde4.addMenuButtonWidget(req,"merge_layers_menu_btn","Merge Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"merge_layers_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"merge_layers_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"merge_layers_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w045","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"w045",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w045","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w045",80,20)
+tde4.addMenuButtonWidget(req,"collapse_all_menu_btn","Collapse All Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"collapse_all_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"collapse_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"collapse_all_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"expand_all_menu_btn","Expand All Layers","layers_menu_wdgt")
+tde4.setWidgetOffsets(req,"expand_all_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"expand_all_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"expand_all_menu_btn",80,20)
+tde4.addMenuWidget(req,"keys_menu","Keys","menu_bar",0)
+tde4.setWidgetOffsets(req,"keys_menu",0,0,0,0)
+tde4.setWidgetAttachModes(req,"keys_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"keys_menu",80,20)
+tde4.addMenuButtonWidget(req,"create_key_menu_btn","Create Key","keys_menu")
+tde4.setWidgetOffsets(req,"create_key_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"create_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"create_key_menu_btn",80,20)
+tde4.addMenuButtonWidget(req,"delete_key_menu_btn","Delete Key","keys_menu")
+tde4.setWidgetOffsets(req,"delete_key_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"delete_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"delete_key_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w056","keys_menu")
+tde4.setWidgetOffsets(req,"w056",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w056","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w056",80,20)
+tde4.addMenuSeparatorWidget(req,"w060","keys_menu")
+tde4.setWidgetOffsets(req,"w060",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w060","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w060",80,20)
+tde4.addMenuButtonWidget(req,"create_zero_key_menu_btn","Create Zero Key","keys_menu")
+tde4.setWidgetOffsets(req,"create_zero_key_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"create_zero_key_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"create_zero_key_menu_btn",80,20)
+tde4.addMenuSeparatorWidget(req,"w071","keys_menu")
+tde4.setWidgetOffsets(req,"w071",0,0,0,0)
+tde4.setWidgetAttachModes(req,"w071","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"w071",80,20)
+tde4.addMenuToggleWidget(req,"show_timeline_keys_menu_btn","Show Timeline Keys","keys_menu",1)
+tde4.setWidgetOffsets(req,"show_timeline_keys_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"show_timeline_keys_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"show_timeline_keys_menu_btn",80,20)
+tde4.addMenuToggleWidget(req,"auto_key_menu_toggle_btn","Auto Key","keys_menu",1)
+tde4.setWidgetOffsets(req,"auto_key_menu_toggle_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"auto_key_menu_toggle_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"auto_key_menu_toggle_btn",80,20)
+tde4.addMenuWidget(req,"objpg_menu","ObjectPG","menu_bar",0)
+tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
+tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"objpg_menu",80,20)
+tde4.addMenuToggleWidget(req,"update_objpg_menu_btn","Update ObjectPG along with Camera","objpg_menu",1)
+tde4.setWidgetOffsets(req,"update_objpg_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"update_objpg_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"update_objpg_menu_btn",80,20)
+tde4.addMenuWidget(req,"pref_menu","Preferences","menu_bar",0)
+tde4.setWidgetOffsets(req,"pref_menu",0,0,0,0)
+tde4.setWidgetAttachModes(req,"pref_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"pref_menu",80,20)
+tde4.addMenuButtonWidget(req,"show_pref_menu_btn","Show Preferences...","pref_menu")
+tde4.setWidgetOffsets(req,"show_pref_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"show_pref_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"show_pref_menu_btn",80,20)
+tde4.addToggleWidget(req,"auto_view_all_toggle_btn","Auto View All",1)
+tde4.setWidgetOffsets(req,"auto_view_all_toggle_btn",0,10,5,0)
+tde4.setWidgetAttachModes(req,"auto_view_all_toggle_btn","ATTACH_NONE","ATTACH_WIDGET","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"auto_view_all_toggle_btn",20,20)
+tde4.addButtonWidget(req,"view_all_btn","View All")
+tde4.setWidgetOffsets(req,"view_all_btn",0,300,5,0)
+tde4.setWidgetAttachModes(req,"view_all_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"view_all_btn",80,20)
+tde4.addButtonWidget(req,"update_viewport_btn","Update Viewport")
+tde4.setWidgetOffsets(req,"update_viewport_btn",0,160,7,0)
+tde4.setWidgetAttachModes(req,"update_viewport_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"update_viewport_btn",125,20)
+tde4.addScaleWidget(req,"weight_slider_wdgt","Weight","DOUBLE",0.0,1.0,1.0)
+tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,60,36,0)
+tde4.setWidgetAttachModes(req,"weight_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"weight_slider_wdgt",200,20)
+tde4.addButtonWidget(req,"weight_key_btn","K")
+tde4.setWidgetOffsets(req,"weight_key_btn",5,35,36,0)
+tde4.setWidgetAttachModes(req,"weight_key_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"weight_key_btn",30,20)
+tde4.addButtonWidget(req,"weight_key_delete_btn","D")
+tde4.setWidgetOffsets(req,"weight_key_delete_btn",32,5,36,0)
+tde4.setWidgetAttachModes(req,"weight_key_delete_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"weight_key_delete_btn",30,20)
+tde4.addScaleWidget(req,"tween_slider_wdgt","Tween","DOUBLE",-1.0,1.0,0.0)
+tde4.setWidgetOffsets(req,"tween_slider_wdgt",52,35,64,0)
+tde4.setWidgetAttachModes(req,"tween_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"tween_slider_wdgt",200,20)
+tde4.addButtonWidget(req,"tween_reset_btn","R")
+tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
+tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"tween_reset_btn",30,20)
+tde4.addButtonWidget(req,"w083","|<<")
+tde4.setWidgetOffsets(req,"w083",11,167,7,0)
+tde4.setWidgetAttachModes(req,"w083","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w083",33,20)
+tde4.addButtonWidget(req,"w084","<")
+tde4.setWidgetOffsets(req,"w084",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w084","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w084",27,20)
+tde4.addButtonWidget(req,"w085",">")
+tde4.setWidgetOffsets(req,"w085",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w085","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w085",27,20)
+tde4.addButtonWidget(req,"w086",">>|")
+tde4.setWidgetOffsets(req,"w086",8,167,7,0)
+tde4.setWidgetAttachModes(req,"w086","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"w086",33,20)
+tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
+tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
+tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
+tde4.setWidgetLinks(req,"menu_bar","","","","")
+tde4.setWidgetLinks(req,"auto_view_all_toggle_btn","","view_all_btn","curve_area_wdgt","")
+tde4.setWidgetLinks(req,"view_all_btn","","","curve_area_wdgt","")
+tde4.setWidgetLinks(req,"update_viewport_btn","","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"weight_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
+tde4.setWidgetLinks(req,"w083","update_viewport_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w084","w083","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w085","w084","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"w086","w085","","layers_list_wdgt","")
+
+cam = tde4.getCurrentCamera()
+frame_offset = tde4.getCameraFrameOffset(cam)
+tde4.setCurveAreaWidgetXOffset(req, "curve_area_wdgt", frame_offset-1)
+
+# Preferences GUI
 pref_req = tde4.createCustomRequester()
 tde4.addLabelWidget(pref_req,"pref_timeline_keys_color_label","Timeline Keys Color","ALIGN_LABEL_CENTER")
 tde4.setWidgetOffsets(pref_req,"pref_timeline_keys_color_label",20,80,10,0)
@@ -906,40 +923,11 @@ tde4.setWidgetLinks(pref_req,"pref_window_height_txt_wdgt","pref_window_width_tx
 tde4.setWidgetLinks(pref_req,"w022","","","pref_window_width_txt_wdgt","")
 tde4.setWidgetLinks(pref_req,"pref_reset_btn_wdgt","","","w022","")
 
-# Preferences requester callbacks
-tde4.setWidgetCallbackFunction(pref_req, "pref_key_red_slider_wdgt", "red_callback")
 
-
-    
-
-
-
-def show_preferences_callback(req, widget, action):
-    tde4.postCustomRequesterAndContinue(pref_req, PREFERENCES_WINDOW_TITLE, 500, 400)
-
-    
-
-
-def red_callback(req, widget, action):
-    print tde4.getWidgetValue(pref_req, "pref_key_red_slider_wdgt")
-    print tde4.getWidgetValue(pref_req, "pref_key_green_slider_wdgt")
-
-# Show pgroup names in option menu
-frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
-pg_name = tde4.getPGroupName(tde4.getCurrentPGroup())
-cam_name = tde4.getCameraName(tde4.getCurrentCamera())
-pg_names = [tde4.getPGroupName(i)+" | "+cam_name for i in tde4.getPGroupList(0)]
-stringlist = ",".join(['"%s"'%member for member in pg_names])
-eval('tde4.modifyOptionMenuWidget(req, "pg_option_menu_wdgt", " ", %s)'%stringlist)
-
-
-option_menu_helper()
-
-
-#Callbacks
+# Main requester callbacks
 tde4.setWidgetCallbackFunction(req,"curve_area_wdgt", "curve_area_callback")
 tde4.setWidgetCallbackFunction(req, "layers_list_wdgt", "layer_item_callback")
-tde4.setWidgetCallbackFunction(req, "pg_option_menu_wdgt", "option_menu_callback")
+tde4.setWidgetCallbackFunction(req, "pg_option_menu_wdgt", "pg_option_menu_callback")
 tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
@@ -949,15 +937,53 @@ tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_l
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
 tde4.setWidgetCallbackFunction(req, "show_timeline_keys_menu_btn", "show_timeline_keys_callback")
 
-
+# Preferences requester callbacks
 tde4.setWidgetCallbackFunction(req, "show_pref_menu_btn", "show_preferences_callback")
+tde4.setWidgetCallbackFunction(pref_req, "pref_key_red_slider_wdgt", "red_callback")
+
+
+if frames > 0:
+    if ("linux" in sys.platform) or ("darwin" in sys.platform):
+        HOME = os.environ["HOME"]
+        if not ".3dequalizer" in os.listdir(HOME):
+            os.mkdir(HOME+"/.3dequalizer")
+    else:
+        if "win" in sys.platform:
+            HOME = os.environ["APPDATA"]
+            if not ".3dequalizer" in os.listdir(HOME):
+                os.mkdir(HOME+"\\.3dequalizer")
+    tde_path = HOME+"/.3dequalizer/"
+    json_file_path = tde_path+PREFERENCES_FILE_NAME
+    if not PREFERENCES_FILE_NAME in os.listdir(tde_path):
+        with open(json_file_path, "w") as f:
+            inital_data = {"key_red": 0.216, "key_green": 0.624, "key_blue": 0.588,
+                           "key_alpha": 0.75, "show_timeline_keys": "on",
+                           "auto_key": "on", "window_width": 1000, "window_height": 700}
+            json.dump(inital_data, f, indent=2, sort_keys=True)    
 
 
 
 
 
-# tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
-tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1200, 900, "cursor_update")
-tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
-tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 
+
+
+
+
+
+
+
+
+
+    # Show pgroup names in option menu
+    pg_name = tde4.getPGroupName(tde4.getCurrentPGroup())
+    cam_name = tde4.getCameraName(tde4.getCurrentCamera())
+    pg_names = [tde4.getPGroupName(i)+" | "+cam_name for i in tde4.getPGroupList(0)]
+    stringlist = ",".join(['"%s"'%member for member in pg_names])
+    eval('tde4.modifyOptionMenuWidget(req, "pg_option_menu_wdgt", " ", %s)'%stringlist)
+    pg_option_menu_helper()    
+    tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
+    tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
+    tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
+else:
+    tde4.postQuestionRequester(WINDOW_TITLE, "Warning, Frames are not found.", "Ok")
