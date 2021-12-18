@@ -117,6 +117,8 @@ def create_curve_set(layer_name):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
+    pref_data = read_preferences_file()
+    pref_collapsed_flag = pref_data["collapsed_flag"]
     # Create curves, insert list widget items
     pos_x_curve = tde4.createCurve()
     pos_y_curve = tde4.createCurve()
@@ -129,7 +131,7 @@ def create_curve_set(layer_name):
                  rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
     parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
                                             0, "LIST_ITEM_NODE")
-    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, 0)
+    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, int(pref_collapsed_flag))
     for count, curve_id in enumerate(curve_ids):
         item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
         child_item = tde4.insertListWidgetItem(req, "layers_list_wdgt",
@@ -361,7 +363,8 @@ def layer_item_callback(req, widget, action):
                 edit_status = 1
             curve = item_label.split("-")[1]
             tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
-                                item_color[0],item_color[1],item_color[2], edit_status)
+                                            item_color[0], item_color[1],
+                                            item_color[2], edit_status)
         # update active layer status data 
         parent = item
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
@@ -652,15 +655,19 @@ def pg_option_menu_callback(req, widget, action):
     pg_option_menu_helper()
 
 
-def edit_preferences_callback(req, widget, action):
+def edit_preferences_helper():
     pref_data = read_preferences_file()
     for key in pref_data.keys():
         value = pref_data[key]        
         tde4.setWidgetValue(pref_req, ("pref_wdgt_" + str(key)), str(value))  
+
+
+def edit_preferences_callback(req, widget, action):
+    edit_preferences_helper()
     tde4.postCustomRequesterAndContinue(pref_req, PREFERENCES_WINDOW_TITLE, 500, 400)
 
 
-def create_inital_data():
+def create_inital_preferences_data():
     return {"key_red": 0.216, "key_green": 0.624, "key_blue": 0.588,
             "key_alpha": 0.75, "show_timeline_keys": 1, "auto_key": 1,
             "auto_view_all": 1, "collapsed_flag": 1,
@@ -677,20 +684,28 @@ def write_preferences_file(data):
         json.dump(data, f, indent=2, sort_keys=True)
 
 
+def reset_preferences_callback(req, widget, action):
+    pref_data = read_preferences_file()
+    pref_data.update(create_inital_preferences_data())
+    write_preferences_file(pref_data)
+    edit_preferences_helper()
+    load_preferences_main_ui()
+
+
 def save_preferences():
-    data = read_preferences_file()
+    pref_data = read_preferences_file()
     for widget in PREFERENCES_WIDGETS:
         value = tde4.getWidgetValue(pref_req, widget)
         key = widget.replace("pref_wdgt_", "")
-        data[key] = value
-    write_preferences_file(data)
+        pref_data[key] = value
+    write_preferences_file(pref_data)
 
 
-def load_preferences():
-    data = read_preferences_file()
+def load_preferences_main_ui():
+    pref_data = read_preferences_file()
     for widget in PREFERENCES_WIDGETS:
         key = widget.replace("pref_wdgt_", "")
-        value = data[key]
+        value = pref_data[key]
         try:
             tde4.setWidgetValue(req, ("main_wdgt_"+str(key)), str(value))
         except:
@@ -698,12 +713,11 @@ def load_preferences():
 
     show_timeline_keys_helper()
     view_all_helper()
-
         
 
 def preferences_widgets_callback(req, widget, action):
     save_preferences()
-    load_preferences()
+    load_preferences_main_ui()
 
 
 
@@ -934,7 +948,7 @@ tde4.addToggleWidget(pref_req,"pref_wdgt_auto_view_all","Auto View All",1)
 tde4.setWidgetOffsets(pref_req,"pref_wdgt_auto_view_all",200,0,5,0)
 tde4.setWidgetAttachModes(pref_req,"pref_wdgt_auto_view_all","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(pref_req,"pref_wdgt_auto_view_all",20,20)
-tde4.addToggleWidget(pref_req,"pref_wdgt_collapsed_flag","New Layer Collapsed Flag",1)
+tde4.addToggleWidget(pref_req,"pref_wdgt_collapsed_flag","Layer Collapsed Flag",1)
 tde4.setWidgetOffsets(pref_req,"pref_wdgt_collapsed_flag",410,90,5,0)
 tde4.setWidgetAttachModes(pref_req,"pref_wdgt_collapsed_flag","ATTACH_NONE","ATTACH_POSITION","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(pref_req,"pref_wdgt_collapsed_flag",20,20)
@@ -1002,6 +1016,8 @@ tde4.setWidgetCallbackFunction(req, "edit_pref_menu_btn", "edit_preferences_call
 # Preferences requester callbacks
 for w in PREFERENCES_WIDGETS:
     tde4.setWidgetCallbackFunction(pref_req, str(w), "preferences_widgets_callback")
+tde4.setWidgetCallbackFunction(pref_req, "pref_wdgt_reset_btn", "reset_preferences_callback")
+    
 
 
 
@@ -1020,7 +1036,7 @@ if frames > 0:
     json_file_path = tde_path+PREFERENCES_FILE_NAME
     if not PREFERENCES_FILE_NAME in os.listdir(tde_path):
         with open(json_file_path, "w") as f:
-            inital_data = create_inital_data()
+            inital_data = create_inital_preferences_data()
             json.dump(inital_data, f, indent=2, sort_keys=True) 
 
     # Show pgroup names in option menu
@@ -1029,12 +1045,14 @@ if frames > 0:
     pg_names = [tde4.getPGroupName(i)+" | "+cam_name for i in tde4.getPGroupList(0)]
     stringlist = ",".join(['"%s"'%member for member in pg_names])
     eval('tde4.modifyOptionMenuWidget(req, "pg_option_menu_wdgt", " ", %s)'%stringlist)
-    pg_option_menu_helper()    
-    tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, 1000, 700, "cursor_update")
+    pg_option_menu_helper()
+    pref_data = read_preferences_file()
+    width, height = int(pref_data["window_width"]), int(pref_data["window_height"])    
+    tde4.postCustomRequesterAndContinue(req, WINDOW_TITLE, width, height, "cursor_update")
     tde4.setCurveAreaWidgetDimensions(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
     tde4.setCurveAreaWidgetFOV(req, "curve_area_wdgt", 1.0, frames, -0.2, 1.0)
 
-    load_preferences()
+    load_preferences_main_ui()
 
 else:
     tde4.postQuestionRequester(WINDOW_TITLE, "Warning, Frames are not found.", "Ok")
