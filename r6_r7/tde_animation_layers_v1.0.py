@@ -653,6 +653,10 @@ def pg_option_menu_callback(req, widget, action):
 
 
 def edit_preferences_callback(req, widget, action):
+    pref_data = read_preferences_file()
+    for key in pref_data.keys():
+        value = pref_data[key]        
+        tde4.setWidgetValue(pref_req, ("pref_wdgt_" + str(key)), str(value))  
     tde4.postCustomRequesterAndContinue(pref_req, PREFERENCES_WINDOW_TITLE, 500, 400)
 
 
