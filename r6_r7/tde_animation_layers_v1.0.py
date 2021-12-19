@@ -22,6 +22,7 @@ RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
 DELETE_KEY_WINDOW_TITLE = "Delete Key"
+JUMP_KEY_WINDOW_TITLE = "Jump to Key"
 WEIGHT_KEY_WINDOW_TITLE = "Weight Key"
 PREFERENCES_WINDOW_TITLE = "3DE Animation Layers Preferences"
 PERSISTENT_STRING_NAME = "PATCHA-3DE-ANIMATION-LAYERS-DATA"
@@ -650,8 +651,12 @@ def weight_curve_key_callback(req, widget, action):
         create_delete_key_helper(weight_curve=True, create=False, delete=True)
 
 
-
 def get_auto_key_status():
+    """get auto key from main UI
+
+    Returns:
+        int: auto key status(1 or 0)
+    """    
     return int(tde4.getWidgetValue(req, "main_wdgt_auto_key"))
        
 
@@ -677,7 +682,57 @@ def weight_slider_callback(req, widget, action):
                 # Update layer weight data
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer]["weight"][str(frame)] = value
                 save_data(data)
-                break    
+                break 
+
+
+def jump_key_helper(frame_string):
+    """returns frame number
+
+    Args:
+        frame_string (str): accepts strings "previous" or "next"
+    """ 
+    return_frame = None 
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()
+    active_layer = get_active_layer_name()
+    if not active_layer:
+        tde4.postQuestionRequester(JUMP_KEY_WINDOW_TITLE,
+                                   "Warning, No active layer found.", "Ok")
+        return
+    curve = get_curves_by_layer_name(active_layer)[0]
+    # Extract key frames and sort
+    key_frames = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer][AXES[0]].keys()
+    key_frames = [int(key) for key in key_frames]
+    key_frames.sort()
+    # Find next or previous key frame
+    if frame_string == "previous":
+        key_frames.reverse()
+    for key_frame in key_frames:        
+        if frame_string == "next":
+            if key_frame > frame:
+                return_frame = key_frame
+                break
+        if frame_string == "previous":
+            if key_frame < frame:
+                return_frame = key_frame
+                break
+    return return_frame
+
+        
+      
+
+def jump_key_callback(req, widget, action):
+    cam = tde4.getCurrentCamera()
+    if widget == "jump_to_next_key_btn":    
+        frame = jump_key_helper("next")
+    if widget == "jump_to_prev_key_btn":
+        frame = jump_key_helper("previous")
+    if frame:
+        tde4.setCurrentFrame(cam, frame)
+        cursor_update(req)
 
 
 def pg_option_menu_helper():   
@@ -962,22 +1017,22 @@ tde4.addButtonWidget(req,"tween_reset_btn","R")
 tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
 tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"tween_reset_btn",30,20)
-tde4.addButtonWidget(req,"w083","|<<")
-tde4.setWidgetOffsets(req,"w083",11,167,7,0)
-tde4.setWidgetAttachModes(req,"w083","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w083",33,20)
-tde4.addButtonWidget(req,"w084","<")
-tde4.setWidgetOffsets(req,"w084",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w084","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w084",27,20)
-tde4.addButtonWidget(req,"w085",">")
-tde4.setWidgetOffsets(req,"w085",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w085","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w085",27,20)
-tde4.addButtonWidget(req,"w086",">>|")
-tde4.setWidgetOffsets(req,"w086",8,167,7,0)
-tde4.setWidgetAttachModes(req,"w086","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"w086",33,20)
+tde4.addButtonWidget(req,"jump_to_start_btn","|<<")
+tde4.setWidgetOffsets(req,"jump_to_start_btn",11,167,7,0)
+tde4.setWidgetAttachModes(req,"jump_to_start_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"jump_to_start_btn",33,20)
+tde4.addButtonWidget(req,"jump_to_prev_key_btn","<")
+tde4.setWidgetOffsets(req,"jump_to_prev_key_btn",8,167,7,0)
+tde4.setWidgetAttachModes(req,"jump_to_prev_key_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"jump_to_prev_key_btn",27,20)
+tde4.addButtonWidget(req,"jump_to_next_key_btn",">")
+tde4.setWidgetOffsets(req,"jump_to_next_key_btn",8,167,7,0)
+tde4.setWidgetAttachModes(req,"jump_to_next_key_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"jump_to_next_key_btn",27,20)
+tde4.addButtonWidget(req,"jump_to_end_btn",">>|")
+tde4.setWidgetOffsets(req,"jump_to_end_btn",8,167,7,0)
+tde4.setWidgetAttachModes(req,"jump_to_end_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"jump_to_end_btn",33,20)
 tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
 tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
 tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
@@ -990,10 +1045,10 @@ tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wd
 tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
-tde4.setWidgetLinks(req,"w083","update_viewport_btn","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w084","w083","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w085","w084","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"w086","w085","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"jump_to_start_btn","update_viewport_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"jump_to_prev_key_btn","jump_to_start_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"jump_to_next_key_btn","jump_to_prev_key_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"jump_to_end_btn","jump_to_next_key_btn","","layers_list_wdgt","")
 
 cam = tde4.getCurrentCamera()
 frame_offset = tde4.getCameraFrameOffset(cam)
@@ -1099,6 +1154,8 @@ tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeli
 tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
 tde4.setWidgetCallbackFunction(req, "weight_key_delete_btn", "weight_curve_key_callback")
 tde4.setWidgetCallbackFunction(req, "weight_slider_wdgt", "weight_slider_callback")
+tde4.setWidgetCallbackFunction(req, "jump_to_next_key_btn", "jump_key_callback")
+tde4.setWidgetCallbackFunction(req, "jump_to_prev_key_btn", "jump_key_callback")
 
 tde4.setWidgetCallbackFunction(req, "edit_pref_menu_btn", "edit_preferences_callback")
 
