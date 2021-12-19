@@ -4,13 +4,14 @@
 # 3DE4.script.gui: Orientation Controls::Edit
 # 3DE4.script.gui.button: Lineup Controls::Anim Layers, align-bottom-left, 80,20
 # 3DE4.script.gui.button: Orientation Controls::Anim Layers, align-bottom-left, 70,20
-# 3DE4.script.comment: This tool works as Maya Animation Layers.
+# 3DE4.script.comment: This tool is similiar to Maya Animation Layers.
 # 3DE4.script.gui.config_menus: true
 
 # Patcha Saheb(patchasaheb@gmail.com)
 # October 07 2021(Montreal)
 
-import os, sys
+import os
+import sys
 import json
 from vl_sdv import*
 import tde4
@@ -119,23 +120,32 @@ def create_curve_set(layer_name):
     data = load_data()
     pref_data = read_preferences_file()
     pref_collapsed_flag = pref_data["collapsed_flag"]
+
     # Create curves, insert list widget items
-    pos_x_curve = tde4.createCurve()
-    pos_y_curve = tde4.createCurve()
-    pos_z_curve = tde4.createCurve()
-    rot_x_curve = tde4.createCurve()
-    rot_y_curve = tde4.createCurve()
-    rot_z_curve = tde4.createCurve()    
-    weight_curve = tde4.createCurve()
-    curve_ids = [pos_x_curve, pos_y_curve, pos_z_curve,
-                 rot_x_curve, rot_y_curve, rot_z_curve, weight_curve]     
+    data_curve_ids = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["curve_ids"]
+    curve_ids = [] 
+    if not data_curve_ids:
+        for i in range(7):
+            curve = tde4.createCurve()
+            curve_ids.append(curve) 
+    else:
+        for i in range(7):
+            curve = data_curve_ids[i]
+            curve_ids.append(curve)
+    # Update layer curve ids data
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["curve_ids"] = curve_ids
+    save_data(data)
+
     parent_item = tde4.insertListWidgetItem(req, "layers_list_wdgt", layer_name,
                                             0, "LIST_ITEM_NODE")
-    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item, int(pref_collapsed_flag))
+    tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", parent_item,
+                                        int(pref_collapsed_flag))
+
     for count, curve_id in enumerate(curve_ids):
         item_name = CURVE_NAMES[count]+" "*SPACE_MULTIPLIER+"-"+str(curve_id)
         child_item = tde4.insertListWidgetItem(req, "layers_list_wdgt",
-                                   item_name, 1, "LIST_ITEM_ATOM", parent_item)
+                                               item_name, 1, "LIST_ITEM_ATOM",
+                                               parent_item)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", child_item,
                                 CURVE_COLORS[count][0], CURVE_COLORS[count][1],
                                 CURVE_COLORS[count][2])
@@ -144,6 +154,7 @@ def create_curve_set(layer_name):
         axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name][axis]
         extract_keys_from_data(curve_ids[count], axis_data)
     # handle weight curve
+    weight_curve = curve_ids[-1]
     axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["weight"]
     extract_keys_from_data(weight_curve, axis_data)
 
@@ -222,7 +233,8 @@ def insert_empty_layer_data(layer_name):
                                                                 "rotation_x": {},
                                                                 "rotation_y": {},
                                                                 "rotation_z": {},
-                                                                "weight": {1:1}}})
+                                                                "weight": {1:1},
+                                                                "curve_ids": []}})
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"].append(layer_name)
     save_data(data)
 
@@ -339,8 +351,8 @@ def set_layer_colors():
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
             ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
-    # Set muted layers color
     # TODO
+    # Set muted layers color
 
 
 def layer_item_callback(req, widget, action):
@@ -462,7 +474,7 @@ def create_empty_layer_callback(req, widget, action):
     sort_layers_order()
 
 
-def get_active_layer():
+def get_active_layer_name():
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
@@ -470,7 +482,7 @@ def get_active_layer():
 
 
 def rename_layer_callback(req, widget, action):    
-    active_layer = get_active_layer()
+    active_layer = get_active_layer_name()
     if not active_layer:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                               "Warning, No active layer found to rename.", "Ok")
@@ -503,7 +515,7 @@ def delete_layers_callback(req, widget, action):
     sel_labels = get_parent_item_labels(True)
     if not sel_labels:
         tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
-                                   "Warning, No layers are selected.", "Ok")
+                                   "Warning, No layer(s) are selected.", "Ok")
         return
     for label in sel_labels:
         item = get_parent_item_by_label(label)
@@ -546,7 +558,7 @@ def show_timeline_keys_helper():
         cam_pers_id = get_cam_pers_id()
         pg_pers_id = get_pg_pers_id()
         data = load_data()
-        active_layer = get_active_layer()
+        active_layer = get_active_layer_name()
         if not active_layer:
             tde4.deleteAllFrameSliderMarks()
             return
@@ -567,14 +579,14 @@ def show_timeline_keys_callback(req, widget, action):
 
 def create_key_helper():
     cam = tde4.getCurrentCamera()
-    frame   = tde4.getCurrentFrame(cam)
+    frame = tde4.getCurrentFrame(cam)
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    active_layer = get_active_layer()
+    active_layer = get_active_layer_name()
     if not active_layer:
         tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE,
-                                       "Warning, No active layer found.", "Ok")
+                                   "Warning, No active layer found.", "Ok")
         return
     curves = get_curves_by_layer_name(active_layer)
     for count, curve in enumerate(curves):
@@ -591,6 +603,24 @@ def create_key_helper():
 
 def create_key_callback(req, widget, action):
     create_key_helper()
+
+
+def get_active_layer_weight_curve():
+    active_layer = get_active_layer_name()
+    if not active_layer:
+        tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE,
+                                   "Warning, No active layer found.", "Ok")
+        return
+    parent_item = get_parent_item_by_label(active_layer)
+
+
+def weight_curve_key_helper(create=True, delete=False):
+    pass
+
+
+def weight_curve_key_callback(req, widget, action):
+    get_active_layer_weight_curve()
+    
 
 
 def pg_option_menu_helper():   
@@ -720,10 +750,8 @@ def preferences_widgets_callback(req, widget, action):
     load_preferences_main_ui()
 
 
-
 # Main GUI
 frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
-
 req = tde4.createCustomRequester()
 tde4.addListWidget(req,"layers_list_wdgt","",1)
 tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,50,90)
@@ -1010,6 +1038,7 @@ tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
 tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeline_keys_callback")
+tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
 
 tde4.setWidgetCallbackFunction(req, "edit_pref_menu_btn", "edit_preferences_callback")
 
