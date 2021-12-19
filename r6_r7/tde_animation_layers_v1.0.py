@@ -21,6 +21,7 @@ WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
+WEIGHT_KEY_WINDOW_TITLE = "Weight Key"
 PREFERENCES_WINDOW_TITLE = "3DE Animation Layers Preferences"
 PERSISTENT_STRING_NAME = "PATCHA-3DE-ANIMATION-LAYERS-DATA"
 SPACE_MULTIPLIER = 10
@@ -183,20 +184,19 @@ def get_curve_min_max_y_value(curve_list):
 
 def view_all_helper():
     curve_list = tde4.getCurveAreaWidgetCurveList(req, "curve_area_wdgt")
-    for curve in curve_list:
-        frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
-        dmin = get_curve_min_max_y_value(curve_list)[0]
-        dmax = get_curve_min_max_y_value(curve_list)[1]         
-        if dmin and dmax:        
-            if dmin == dmax:
-                dmax = dmax * 2 
-        else:
-            dmin = -0.5
-            dmax = 0.5 
-        tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
-                         frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
-        tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
-                    frames*1.05,dmin-((dmax-dmin)*0.10),dmax+((dmax-dmin)*0.10))
+    frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
+    dmin = get_curve_min_max_y_value(curve_list)[0]
+    dmax = get_curve_min_max_y_value(curve_list)[1]         
+    if dmin and dmax:        
+        if dmin == dmax:
+            dmax = dmax * 2 
+    else:
+        dmin = -0.5
+        dmax = 1.0 
+    tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
+                        frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
+    tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
+                frames*1.05,dmin-((dmax-dmin)*0.10),dmax+((dmax-dmin)*0.10))
 
 
 def view_all_btn_callback(req, widget, action):
@@ -377,7 +377,7 @@ def layer_item_callback(req, widget, action):
             tde4.attachCurveAreaWidgetCurve(req, "curve_area_wdgt", curve,
                                             item_color[0], item_color[1],
                                             item_color[2], edit_status)
-        # update active layer status data 
+        # Update active layer status data 
         parent = item
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
             parent = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
@@ -545,7 +545,7 @@ def collapse_or_expand_layers_callback(req, widget, action):
 def get_curves_by_layer_name(layer_name):
     curve_ids = []
     parent_item = get_parent_item_by_label(layer_name)
-    for item in range(parent_item+1, parent_item+7):
+    for item in range(parent_item+1, parent_item+8):
         label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
         curve_id = label.split("-")[1]
         curve_ids.append(curve_id)
@@ -577,7 +577,7 @@ def show_timeline_keys_callback(req, widget, action):
     show_timeline_keys_helper()
 
 
-def create_key_helper():
+def create_key_helper(weight_curve=False):
     cam = tde4.getCurrentCamera()
     frame = tde4.getCurrentFrame(cam)
     cam_pers_id = get_cam_pers_id()
@@ -589,37 +589,57 @@ def create_key_helper():
                                    "Warning, No active layer found.", "Ok")
         return
     curves = get_curves_by_layer_name(active_layer)
+    if weight_curve == False:
+        # Remove weight curve 
+        curves.pop()
+    else:
+        # Extract weight curve
+        curves = [curves.pop()]
     for count, curve in enumerate(curves):
         y_value = tde4.evaluateCurve(curve, frame)
         key = tde4.createCurveKey(curve,[frame, y_value])
         tde4.setCurveKeyMode(curve, key, "LINEAR")
         tde4.setCurveKeyFixedXFlag(curve, key, 1)
-        # Update layers data
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
+        if weight_curve == False:
+            # Update layer axes data
+            data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
+        else:
+            # Update layer weight data
+            data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)]["weight"][str(frame)] = y_value
     save_data(data)
     # Show timeline keys
     show_timeline_keys_helper()
 
 
 def create_key_callback(req, widget, action):
-    create_key_helper()
-
-
-def get_active_layer_weight_curve():
-    active_layer = get_active_layer_name()
-    if not active_layer:
-        tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE,
-                                   "Warning, No active layer found.", "Ok")
-        return
-    parent_item = get_parent_item_by_label(active_layer)
-
-
-def weight_curve_key_helper(create=True, delete=False):
-    pass
+    create_key_helper(weight_curve=False)
 
 
 def weight_curve_key_callback(req, widget, action):
-    get_active_layer_weight_curve()
+    create_key_helper(weight_curve=True)
+
+
+def weight_slider_callback(req, widget, action):
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()
+    active_layer = get_active_layer_name()
+    value = tde4.getWidgetValue(req, "weight_slider_wdgt")
+    if active_layer:
+        weight_curve = get_curves_by_layer_name(active_layer)[-1]
+        key_list = tde4.getCurveKeyList(weight_curve, 0)
+        for key in key_list:
+            pos2d = tde4.getCurveKeyPosition(weight_curve, key)
+            if frame == pos2d[0]:
+                tde4.setCurveKeyPosition(weight_curve, key, [frame, float(value)])
+                data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer]["weight"][str(frame)] = value
+                save_data(data)
+                break
+    # TODO respect auto key toggle
+        
+
     
 
 
@@ -1039,6 +1059,7 @@ tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_l
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
 tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeline_keys_callback")
 tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
+tde4.setWidgetCallbackFunction(req, "weight_slider_wdgt", "weight_slider_callback")
 
 tde4.setWidgetCallbackFunction(req, "edit_pref_menu_btn", "edit_preferences_callback")
 
