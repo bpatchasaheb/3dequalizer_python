@@ -21,6 +21,7 @@ WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
+DELETE_KEY_WINDOW_TITLE = "Delete Key"
 WEIGHT_KEY_WINDOW_TITLE = "Weight Key"
 PREFERENCES_WINDOW_TITLE = "3DE Animation Layers Preferences"
 PERSISTENT_STRING_NAME = "PATCHA-3DE-ANIMATION-LAYERS-DATA"
@@ -577,7 +578,18 @@ def show_timeline_keys_callback(req, widget, action):
     show_timeline_keys_helper()
 
 
-def create_key_helper(weight_curve=False):
+def get_curve_key_at_frame(curve, frame):
+    status = None
+    key_list = tde4.getCurveKeyList(curve, 0)
+    for key in key_list:
+        pos2d = tde4.getCurveKeyPosition(curve, key)
+        if frame == pos2d[0]:
+            status = key
+            break
+    return status
+
+    
+def create_delete_key_helper(weight_curve=False, create=True, delete=False):
     cam = tde4.getCurrentCamera()
     frame = tde4.getCurrentFrame(cam)
     cam_pers_id = get_cam_pers_id()
@@ -594,27 +606,49 @@ def create_key_helper(weight_curve=False):
     else:
         curves = [curves.pop()]  # Extract weight curve
     for count, curve in enumerate(curves):
-        y_value = tde4.evaluateCurve(curve, frame)
-        key = tde4.createCurveKey(curve,[frame, y_value])
-        tde4.setCurveKeyMode(curve, key, "LINEAR")
-        tde4.setCurveKeyFixedXFlag(curve, key, 1)
-        if weight_curve == False:
-            # Update layer axes data
-            data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
-        else:
-            # Update layer weight data
-            data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)]["weight"][str(frame)] = y_value
+        if create == True:
+            y_value = tde4.evaluateCurve(curve, frame)
+            key = tde4.createCurveKey(curve,[frame, y_value])
+            tde4.setCurveKeyMode(curve, key, "LINEAR")
+            tde4.setCurveKeyFixedXFlag(curve, key, 1)
+            if weight_curve == False:
+                # Update layer axes data
+                data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)] = y_value
+            else:
+                # Update layer weight data
+                data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)]["weight"][str(frame)] = y_value
+        if delete == True:
+            key = get_curve_key_at_frame(curve, frame)            
+            if not key:
+                tde4.postQuestionRequester(DELETE_KEY_WINDOW_TITLE,
+                      "Warning, No key found to delete at current frame.", "Ok")
+                return
+            tde4.deleteCurveKey(curve, key)
+            if weight_curve == False:
+                # Update layer axes data
+                del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)][AXES[count]][str(frame)]
+            else:
+                # Update layer weight data
+                del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)]["weight"][str(frame)]         
     save_data(data)
     # Show timeline keys
     show_timeline_keys_helper()
 
 
 def create_key_callback(req, widget, action):
-    create_key_helper(weight_curve=False)
+    create_delete_key_helper(weight_curve=False, create=True, delete=False)
+
+
+def delete_key_callback(req, widget, action):
+    create_delete_key_helper(weight_curve=False, create=False, delete=True)
 
 
 def weight_curve_key_callback(req, widget, action):
-    create_key_helper(weight_curve=True)
+    if widget == "weight_key_btn":
+        create_delete_key_helper(weight_curve=True, create=True, delete=False)
+    if widget == "weight_key_delete_btn":
+        create_delete_key_helper(weight_curve=True, create=False, delete=True)
+
 
 
 def get_auto_key_status():
@@ -632,7 +666,7 @@ def weight_slider_callback(req, widget, action):
     if active_layer:
         # Respect auto key
         if get_auto_key_status() == 1:
-            create_key_helper(weight_curve=True)
+            create_delete_key_helper(weight_curve=True, create=True, delete=False)
         # Set curve key y value
         weight_curve = get_curves_by_layer_name(active_layer)[-1]
         key_list = tde4.getCurveKeyList(weight_curve, 0)
@@ -1060,8 +1094,10 @@ tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callba
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
+tde4.setWidgetCallbackFunction(req, "delete_key_menu_btn", "delete_key_callback")
 tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeline_keys_callback")
 tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
+tde4.setWidgetCallbackFunction(req, "weight_key_delete_btn", "weight_curve_key_callback")
 tde4.setWidgetCallbackFunction(req, "weight_slider_wdgt", "weight_slider_callback")
 
 tde4.setWidgetCallbackFunction(req, "edit_pref_menu_btn", "edit_preferences_callback")
