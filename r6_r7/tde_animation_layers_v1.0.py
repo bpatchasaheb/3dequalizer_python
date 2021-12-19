@@ -620,6 +620,26 @@ def weight_curve_key_callback(req, widget, action):
 def get_auto_key_status():
     return int(tde4.getWidgetValue(req, "main_wdgt_auto_key"))
 
+def weight_slider_callback(req, widget, action):
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()
+    active_layer = get_active_layer_name()
+    value = tde4.getWidgetValue(req, "weight_slider_wdgt")
+    if active_layer:
+        weight_curve = get_curves_by_layer_name(active_layer)[-1]
+        key_list = tde4.getCurveKeyList(weight_curve, 0)
+        for key in key_list:
+            pos2d = tde4.getCurveKeyPosition(weight_curve, key)
+            if frame == pos2d[0]:
+                tde4.setCurveKeyPosition(weight_curve, key, [frame, float(value)])
+                data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer]["weight"][str(frame)] = value
+                save_data(data)
+                break
+    # TODO respect auto key toggle
+        
 
 def weight_slider_callback(req, widget, action):
     cam = tde4.getCurrentCamera()
