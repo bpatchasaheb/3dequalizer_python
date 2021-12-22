@@ -812,6 +812,14 @@ def weight_slider_callback(req, widget, action):
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer]["weight"][str(frame)] = value
                 save_data(data)
                 break 
+            
+            
+def tween_slider_callback(req, widget, action):
+    if action == 2:
+        print ("LMB released.....")
+    if action == 3:
+        print ("LMB dragging.....")
+        
 
 
 def jump_key_helper(frame_string):
@@ -1305,6 +1313,7 @@ tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeli
 tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
 tde4.setWidgetCallbackFunction(req, "weight_key_delete_btn", "weight_curve_key_callback")
 tde4.setWidgetCallbackFunction(req, "weight_slider_wdgt", "weight_slider_callback")
+tde4.setWidgetCallbackFunction(req, "tween_slider_wdgt", "tween_slider_callback")
 tde4.setWidgetCallbackFunction(req, "jump_to_next_key_btn", "jump_key_callback")
 tde4.setWidgetCallbackFunction(req, "jump_to_prev_key_btn", "jump_key_callback")
 tde4.setWidgetCallbackFunction(req, "jump_to_pb_start_btn", "jump_key_callback")
