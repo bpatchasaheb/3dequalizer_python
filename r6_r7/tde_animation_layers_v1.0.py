@@ -812,6 +812,8 @@ def weight_slider_callback(req, widget, action):
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer]["weight"][str(frame)] = value
                 save_data(data)
                 break 
+        if action == 2:
+            tde4.setWidgetValue(req, "weight_slider_wdgt", str(1))
             
             
 def tween_slider_callback(req, widget, action):
@@ -1006,19 +1008,19 @@ def preferences_widgets_callback(req, widget, action):
 frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
 req = tde4.createCustomRequester()
 tde4.addListWidget(req,"layers_list_wdgt","",1)
-tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,50,115)
-tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW")
+tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,115)
+tde4.setWidgetAttachModes(req,"layers_list_wdgt","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"layers_list_wdgt",290,150)
 tde4.addCurveAreaWidget(req,"curve_area_wdgt","")
 tde4.setWidgetOffsets(req,"curve_area_wdgt",5,5,25,30)
 tde4.setWidgetAttachModes(req,"curve_area_wdgt","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW")
 tde4.setWidgetSize(req,"curve_area_wdgt",150,150)
 tde4.addOptionMenuWidget(req,"pg_option_menu_wdgt","","temp")
-tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,25,0)
+tde4.setWidgetOffsets(req,"pg_option_menu_wdgt",5,5,3,0)
 tde4.setWidgetAttachModes(req,"pg_option_menu_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"pg_option_menu_wdgt",150,20)
 tde4.addMenuBarWidget(req,"menu_bar")
-tde4.setWidgetOffsets(req,"menu_bar",0,0,0,0)
+tde4.setWidgetOffsets(req,"menu_bar",0,300,0,0)
 tde4.setWidgetAttachModes(req,"menu_bar","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"menu_bar",300,20)
 tde4.addMenuWidget(req,"layers_menu_wdgt","Layers","menu_bar",0)
@@ -1185,7 +1187,7 @@ tde4.addButtonWidget(req,"jump_to_pb_end_btn",">>]")
 tde4.setWidgetOffsets(req,"jump_to_pb_end_btn",10,167,8,0)
 tde4.setWidgetAttachModes(req,"jump_to_pb_end_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"jump_to_pb_end_btn",40,19)
-tde4.setWidgetLinks(req,"layers_list_wdgt","","","","")
+tde4.setWidgetLinks(req,"layers_list_wdgt","","","pg_option_menu_wdgt","")
 tde4.setWidgetLinks(req,"curve_area_wdgt","","layers_list_wdgt","","")
 tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
 tde4.setWidgetLinks(req,"menu_bar","","","","")
@@ -1204,6 +1206,7 @@ tde4.setWidgetLinks(req,"jump_to_next_key_btn","jump_to_prev_key_btn","","tween_
 tde4.setWidgetLinks(req,"jump_to_end_btn","jump_to_pb_end_btn","","tween_slider_wdgt","")
 tde4.setWidgetLinks(req,"jump_to_pb_start_btn","jump_to_start_btn","","tween_slider_wdgt","")
 tde4.setWidgetLinks(req,"jump_to_pb_end_btn","jump_to_next_key_btn","","tween_slider_wdgt","")
+
 
 cam = tde4.getCurrentCamera()
 frame_offset = tde4.getCameraFrameOffset(cam)
