@@ -47,27 +47,42 @@ PREFERENCES_WIDGETS = ["pref_wdgt_key_red", "pref_wdgt_key_green", "pref_wdgt_ke
                        "pref_wdgt_window_height"]
 
 
+def get_cam_pers_id():  
+    """ Get current camera persistent id
 
-
-
-
-
-def get_cam_pers_id():
+    Returns:
+        int: camera persistent id
+    """      
     cam = tde4.getCurrentCamera()
     return tde4.getCameraPersistentID(cam)
 
 
 def get_pg_pers_id():
+    """ Get current pgroup persistent id
+
+    Returns:
+        int: pgroup persistent id
+    """    
     pg = tde4.getCurrentPGroup()
     return tde4.getPGroupPersistentID(pg)
 
 
 def load_data():
+    """ Get persistent string from stringDB
+
+    Returns:
+        str: a persistent string
+    """    
     data_load = json.loads(tde4.getPersistentString(PERSISTENT_STRING_NAME))
     return data_load
 
 
 def save_data(data_to_save):
+    """ Save persistent string to stringDB
+
+    Returns:
+        str: a persistent string
+    """     
     data_save = json.dumps(data_to_save, sort_keys=True)
     tde4.addPersistentString(PERSISTENT_STRING_NAME, data_save)
 
@@ -88,6 +103,7 @@ def curve_area_callback(req, widget, action):
 
 
 def snap_edit_to_filtered_curves():
+    """ Snap Edit curves to Filtered curves """    
     pg = tde4.getCurrentPGroup()
     cam = tde4.getCurrentCamera()
     frame = tde4.getCurrentFrame(cam)
@@ -109,6 +125,12 @@ def snap_edit_to_filtered_curves():
 
 
 def extract_keys_from_data(curve, axis_data):
+    """ Helper function to create keys on a given curve from data
+
+    Args:
+        curve (int): curve type object
+        axis_data (dict): a dictionary to extract keys
+    """    
     for frame in axis_data.keys():
         x = float(frame)
         y = float(axis_data[frame])
@@ -118,6 +140,11 @@ def extract_keys_from_data(curve, axis_data):
 
 
 def create_curve_set(layer_name): 
+    """ Create curves and keys by extracting from data by layer name
+
+    Args:
+        layer_name (str): a layer name to extract data
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
@@ -173,6 +200,14 @@ def create_curve_set(layer_name):
 
 
 def get_curve_min_max_y_value(curve_list):
+    """ Get minimum and maximum y values of given curves
+
+    Args:
+        curve_list (list): a list containing curve ids
+
+    Returns:
+        list: a list containing minimum and maximum values
+    """    
     min_max_values = [None, None]    
     key_data = []
     for curve in curve_list:
@@ -186,7 +221,7 @@ def get_curve_min_max_y_value(curve_list):
     return min_max_values
 
 
-def view_all_helper():
+def view_all_helper():    
     curve_list = tde4.getCurveAreaWidgetCurveList(req, "curve_area_wdgt")
     frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
     dmin = get_curve_min_max_y_value(curve_list)[0]
@@ -208,6 +243,13 @@ def view_all_btn_callback(req, widget, action):
 
 
 def insert_pg_editcurve_data(layer_name, edit_curve, axis):
+    """ Insert current pgroup transformation into data by layer name and axis
+
+    Args:
+        layer_name (str): a layer name to insert data
+        edit_curve (str): edit curve name
+        axis (str): an axis name
+    """    
     pg = tde4.getCurrentPGroup()
     cam = tde4.getCurrentCamera()
     cam_pers_id = get_cam_pers_id()
@@ -228,6 +270,11 @@ def insert_base_anim_data():
 
 
 def insert_empty_layer_data(layer_name):
+    """ Insert an empty layer into data
+
+    Args:
+        layer_name (str): a layer name
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()      
     data = load_data()
@@ -244,6 +291,11 @@ def insert_empty_layer_data(layer_name):
 
 
 def convert_to_angles(r3d):
+    """ Helper function to convert radians to degrees
+
+    Args:
+        r3d (list): a matrix3d object
+    """    
     rot	= rot3d(mat3d(r3d)).angles(VL_APPLY_ZXY)
     rx	= (rot[0]*180.0)/3.141592654
     ry	= (rot[1]*180.0)/3.141592654
@@ -270,6 +322,11 @@ def insert_pg_bake_data():
     
 
 def is_pg_animation_changed():
+    """ Helper function to check if pgroup animation is changed or not
+
+    Returns:
+        bool: True if animation is changed
+    """    
     pg = tde4.getCurrentPGroup()
     cam = tde4.getCurrentCamera()
     cam_pers_id = get_cam_pers_id()
@@ -290,6 +347,12 @@ def is_pg_animation_changed():
 
 
 def insert_inital_data(for_cam=False, for_pg=False):
+    """ Insert inital data if not exists
+
+    Args:
+        for_cam (bool, optional): insert all data. Defaults to False.
+        for_pg (bool, optional): insert pgroup data under cam. Defaults to False.
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()      
     data = load_data()
@@ -311,6 +374,14 @@ def insert_inital_data(for_cam=False, for_pg=False):
 
 
 def get_parent_items(selected=False):
+    """ Get selected or all parent items indices
+
+    Args:
+        selected (bool, optional): if True get only selected layers. Defaults to False.
+
+    Returns:
+        list: a list containing parent indices
+    """    
     parent_nodes = []
     if selected == False:
         items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
@@ -324,6 +395,14 @@ def get_parent_items(selected=False):
 
 
 def get_parent_item_labels(selected=False):
+    """ Get selected or all parent item labels(layer names)
+
+    Args:
+        selected (bool, optional): if True get only selected layers. Defaults to False.
+
+    Returns:
+        list: a list containing parent item labels(layer names)
+    """    
     item_labels = []
     for item in get_parent_items(selected):
         label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
@@ -332,6 +411,14 @@ def get_parent_item_labels(selected=False):
 
 
 def get_parent_item_by_label(label):
+    """ Get a parent item index by its label
+
+    Args:
+        label (str): a parent item label 
+
+    Returns:
+        int: a parent item index
+    """    
     for item in get_parent_items(False):
         if tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item) == label:
             item = item
@@ -403,6 +490,11 @@ def layer_item_callback(req, widget, action):
 
 
 def get_animlayer_increment_number():
+    """ Get the increment number of a layer type
+
+    Returns:
+        int: a number 
+    """    
     nums = [0]
     item_labels = get_parent_item_labels(False)
     for label in item_labels:
@@ -455,6 +547,11 @@ def sort_layers_order():
 
 
 def update_layers_order_data(order_list):
+    """ Update order of the layers into data
+
+    Args:
+        order_list (list): an order list
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
@@ -479,6 +576,11 @@ def create_empty_layer_callback(req, widget, action):
 
 
 def get_active_layer_name():
+    """ Get an active layer name
+
+    Returns:
+        str: an active layer name
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
@@ -547,6 +649,14 @@ def collapse_or_expand_layers_callback(req, widget, action):
 
 
 def get_curves_by_layer_name(layer_name):
+    """ Helper function to get all layer curves
+
+    Args:
+        layer_name (str): a layer name to obatain the curves
+
+    Returns:
+        list: returns layer curve ids
+    """    
     curve_ids = []
     parent_item = get_parent_item_by_label(layer_name)
     for item in range(parent_item+1, parent_item+8):
@@ -557,6 +667,7 @@ def get_curves_by_layer_name(layer_name):
 
 
 def show_timeline_keys_helper():
+    """ Helper function to show or hide timeline keys """    
     pref_data = read_preferences_file()
     if tde4.getWidgetValue(req, "main_wdgt_show_timeline_keys") == 1:
         cam_pers_id = get_cam_pers_id()
@@ -582,6 +693,15 @@ def show_timeline_keys_callback(req, widget, action):
 
 
 def get_curve_key_at_frame(curve, frame):
+    """ Helper function to check existance of a curve key
+
+    Args:
+        curve (int): curve type object
+        frame (int): a frame to check the key
+
+    Returns:
+        (int): returns a curve key id if exists
+    """    
     status = None
     key_list = tde4.getCurveKeyList(curve, 0)
     for key in key_list:
@@ -593,6 +713,13 @@ def get_curve_key_at_frame(curve, frame):
 
     
 def create_delete_key_helper(weight_curve=False, create=True, delete=False):
+    """ Helper function to create or delete keys
+
+    Args:
+        weight_curve (bool): respect weight curve or not. Defaults to False.
+        create (bool): create key on active layer. Defaults to True.
+        delete (booll): delete key on active layer. Defaults to False.
+    """    
     cam = tde4.getCurrentCamera()
     frame = tde4.getCurrentFrame(cam)
     cam_pers_id = get_cam_pers_id()
@@ -688,7 +815,7 @@ def weight_slider_callback(req, widget, action):
 
 
 def jump_key_helper(frame_string):
-    """returns frame number
+    """returns frame number to jump
 
     Args:
         frame_string (str): accepts strings "previous" or "next"
