@@ -125,7 +125,7 @@ def snap_edit_to_filtered_curves():
 
 
 def extract_keys_from_data(curve, axis_data):
-    """ Helper function to create keys on a given curve from data
+    """ Create keys on a given curve from data
 
     Args:
         curve (int): curve type object
@@ -291,7 +291,7 @@ def insert_empty_layer_data(layer_name):
 
 
 def convert_to_angles(r3d):
-    """ Helper function to convert radians to degrees
+    """ Convert radians to degrees
 
     Args:
         r3d (list): a matrix3d object
@@ -322,7 +322,7 @@ def insert_pg_bake_data():
     
 
 def is_pg_animation_changed():
-    """ Helper function to check if pgroup animation is changed or not
+    """ Check if pgroup animation is changed or not
 
     Returns:
         bool: True if animation is changed
@@ -649,7 +649,7 @@ def collapse_or_expand_layers_callback(req, widget, action):
 
 
 def get_curves_by_layer_name(layer_name):
-    """ Helper function to get all layer curves
+    """ Get all curves of a layer
 
     Args:
         layer_name (str): a layer name to obatain the curves
@@ -667,7 +667,7 @@ def get_curves_by_layer_name(layer_name):
 
 
 def show_timeline_keys_helper():
-    """ Helper function to show or hide timeline keys """    
+    """ Show or hide timeline keys """    
     pref_data = read_preferences_file()
     if tde4.getWidgetValue(req, "main_wdgt_show_timeline_keys") == 1:
         cam_pers_id = get_cam_pers_id()
@@ -693,14 +693,14 @@ def show_timeline_keys_callback(req, widget, action):
 
 
 def get_curve_key_at_frame(curve, frame):
-    """ Helper function to check existance of a curve key
+    """ Check existance of a curve key
 
     Args:
         curve (int): curve type object
         frame (int): a frame to check the key
 
     Returns:
-        (int): returns a curve key id if exists
+        (int): curve key id if exists
     """    
     status = None
     key_list = tde4.getCurveKeyList(curve, 0)
@@ -728,7 +728,7 @@ def create_delete_key_helper(weight_curve=False, create=True, delete=False):
     active_layer = get_active_layer_name()
     if not active_layer:
         tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE,
-                                   "Warning, No active layer found.", "Ok")
+                                   "Warning, No active layer found to create key.", "Ok")
         return
     curves = get_curves_by_layer_name(active_layer)
     if weight_curve == False:
@@ -815,15 +815,15 @@ def weight_slider_callback(req, widget, action):
             
             
 def tween_slider_callback(req, widget, action):
-    if action == 2:
-        print ("LMB released.....")
     if action == 3:
-        print ("LMB dragging.....")
+        pass
+    if action == 2:
+        tde4.setWidgetValue(req, "tween_slider_wdgt", str(0))
         
 
 
 def jump_key_helper(frame_string):
-    """returns frame number to jump
+    """ Helper function for jump to keys
 
     Args:
         frame_string (str): accepts strings "previous" or "next"
@@ -1109,10 +1109,6 @@ tde4.addMenuToggleWidget(req,"main_wdgt_show_timeline_keys","Show Timeline Keys"
 tde4.setWidgetOffsets(req,"main_wdgt_show_timeline_keys",0,0,0,0)
 tde4.setWidgetAttachModes(req,"main_wdgt_show_timeline_keys","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"main_wdgt_show_timeline_keys",80,20)
-tde4.addMenuToggleWidget(req,"main_wdgt_auto_key","Auto Key","keys_menu",1)
-tde4.setWidgetOffsets(req,"main_wdgt_auto_key",0,0,0,0)
-tde4.setWidgetAttachModes(req,"main_wdgt_auto_key","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"main_wdgt_auto_key",80,20)
 tde4.addMenuWidget(req,"objpg_menu","ObjectPG","menu_bar",0)
 tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
@@ -1137,14 +1133,18 @@ tde4.addButtonWidget(req,"view_all_btn","View All")
 tde4.setWidgetOffsets(req,"view_all_btn",0,300,5,0)
 tde4.setWidgetAttachModes(req,"view_all_btn","ATTACH_NONE","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"view_all_btn",80,20)
-tde4.addButtonWidget(req,"vp_to_curves_btn","Viewport -> Curves")
-tde4.setWidgetOffsets(req,"vp_to_curves_btn",5,0,7,0)
-tde4.setWidgetAttachModes(req,"vp_to_curves_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"vp_to_curves_btn",140,20)
-tde4.addButtonWidget(req,"curves_to_vp_btn","Curves -> Viewport")
-tde4.setWidgetOffsets(req,"curves_to_vp_btn",10,5,7,0)
-tde4.setWidgetAttachModes(req,"curves_to_vp_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"curves_to_vp_btn",135,20)
+tde4.addButtonWidget(req,"create_key_btn","Key")
+tde4.setWidgetOffsets(req,"create_key_btn",5,0,7,0)
+tde4.setWidgetAttachModes(req,"create_key_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"create_key_btn",50,20)
+tde4.addButtonWidget(req,"update_viewport_btn","Update Viewport")
+tde4.setWidgetOffsets(req,"update_viewport_btn",13,0,7,0)
+tde4.setWidgetAttachModes(req,"update_viewport_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"update_viewport_btn",130,20)
+tde4.addToggleWidget(req,"main_wdgt_auto_key","Auto Key",1)
+tde4.setWidgetOffsets(req,"main_wdgt_auto_key",80,0,7,0)
+tde4.setWidgetAttachModes(req,"main_wdgt_auto_key","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
+tde4.setWidgetSize(req,"main_wdgt_auto_key",20,20)
 tde4.addScaleWidget(req,"weight_slider_wdgt","Weight","DOUBLE",0.0,1.0,1.0)
 tde4.setWidgetOffsets(req,"weight_slider_wdgt",54,60,36,0)
 tde4.setWidgetAttachModes(req,"weight_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
@@ -1158,13 +1158,9 @@ tde4.setWidgetOffsets(req,"weight_key_delete_btn",32,5,36,0)
 tde4.setWidgetAttachModes(req,"weight_key_delete_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"weight_key_delete_btn",30,20)
 tde4.addScaleWidget(req,"tween_slider_wdgt","Tween","DOUBLE",-1.0,1.0,0.0)
-tde4.setWidgetOffsets(req,"tween_slider_wdgt",52,35,64,0)
+tde4.setWidgetOffsets(req,"tween_slider_wdgt",52,5,64,0)
 tde4.setWidgetAttachModes(req,"tween_slider_wdgt","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
 tde4.setWidgetSize(req,"tween_slider_wdgt",200,20)
-tde4.addButtonWidget(req,"tween_reset_btn","R")
-tde4.setWidgetOffsets(req,"tween_reset_btn",7,5,64,0)
-tde4.setWidgetAttachModes(req,"tween_reset_btn","ATTACH_WIDGET","ATTACH_WINDOW","ATTACH_WIDGET","ATTACH_NONE")
-tde4.setWidgetSize(req,"tween_reset_btn",30,20)
 tde4.addButtonWidget(req,"jump_to_start_btn","|<<")
 tde4.setWidgetOffsets(req,"jump_to_start_btn",13,167,8,0)
 tde4.setWidgetAttachModes(req,"jump_to_start_btn","ATTACH_WIDGET","ATTACH_NONE","ATTACH_WIDGET","ATTACH_NONE")
@@ -1195,13 +1191,13 @@ tde4.setWidgetLinks(req,"pg_option_menu_wdgt","curve_area_wdgt","","","")
 tde4.setWidgetLinks(req,"menu_bar","","","","")
 tde4.setWidgetLinks(req,"main_wdgt_auto_view_all","","view_all_btn","curve_area_wdgt","")
 tde4.setWidgetLinks(req,"view_all_btn","","","curve_area_wdgt","")
-tde4.setWidgetLinks(req,"vp_to_curves_btn","curve_area_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"curves_to_vp_btn","vp_to_curves_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"create_key_btn","curve_area_wdgt","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"update_viewport_btn","create_key_btn","","layers_list_wdgt","")
+tde4.setWidgetLinks(req,"main_wdgt_auto_key","update_viewport_btn","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_key_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"weight_key_delete_btn","weight_slider_wdgt","","layers_list_wdgt","")
 tde4.setWidgetLinks(req,"tween_slider_wdgt","curve_area_wdgt","","layers_list_wdgt","")
-tde4.setWidgetLinks(req,"tween_reset_btn","tween_slider_wdgt","","layers_list_wdgt","weight_key_delete_btn")
 tde4.setWidgetLinks(req,"jump_to_start_btn","curve_area_wdgt","","tween_slider_wdgt","")
 tde4.setWidgetLinks(req,"jump_to_prev_key_btn","jump_to_pb_start_btn","","tween_slider_wdgt","")
 tde4.setWidgetLinks(req,"jump_to_next_key_btn","jump_to_prev_key_btn","","tween_slider_wdgt","")
@@ -1308,6 +1304,7 @@ tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callba
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
+tde4.setWidgetCallbackFunction(req, "create_key_btn", "create_key_callback")
 tde4.setWidgetCallbackFunction(req, "delete_key_menu_btn", "delete_key_callback")
 tde4.setWidgetCallbackFunction(req, "main_wdgt_show_timeline_keys", "show_timeline_keys_callback")
 tde4.setWidgetCallbackFunction(req, "weight_key_btn", "weight_curve_key_callback")
