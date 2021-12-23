@@ -611,33 +611,42 @@ def rename_layer_callback(req, widget, action):
         # Update active layer data
         update_active_layer_data(active_layer, new_name)
         # Update layers order data
-        update_layers_order_data(get_parent_item_labels(False)) 
+        update_layers_order_data(get_parent_item_labels(False))
+        
+        
+def delete_layers_helper(layer_names):
+    """ Helper function to delete layers
 
-
-def delete_layers_callback(req, widget, action):
+    Args:
+        layer_names (list): a list of layer names
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    sel_labels = get_parent_item_labels(True)
-    if not sel_labels:
-        tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
-                                   "Warning, No layer(s) are selected.", "Ok")
-        return
-    for label in sel_labels:
-        item = get_parent_item_by_label(label)
-        # BaseAnimation layer can not be deletedSs
-        if label == "BaseAnimation":
+    for name in layer_names:
+        item = get_parent_item_by_label(name)
+        # BaseAnimation layer can not be deleted
+        if name == "BaseAnimation":
             tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
                        "Warning, BaseAnimation layer can not be deleted.", "Ok")
             return
         tde4.removeListWidgetItem(req, "layers_list_wdgt", item)
         # Update layers data
-        del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(label)]
+        del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(name)]
         # Update active layer data to None
         data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
     # Update layers order
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(False)
     save_data(data)
+
+
+def delete_layers_callback(req, widget, action):
+    layer_names = get_parent_item_labels(True)
+    if not layer_names:
+        tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
+                                   "Warning, No layer(s) are selected.", "Ok")
+        return
+    delete_layers_helper(layer_names)
 
 
 def collapse_or_expand_layers_callback(req, widget, action):
@@ -817,8 +826,37 @@ def weight_slider_callback(req, widget, action):
             
             
 def tween_slider_callback(req, widget, action):
-    if action == 3:
-        pass
+    cam = tde4.getCurrentCamera()
+    frame = tde4.getCurrentFrame(cam)
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()
+    active_layer = get_active_layer_name()
+    tween_value = tde4.getWidgetValue(req, "tween_slider_wdgt")
+    if active_layer: 
+        curves = get_curves_by_layer_name(active_layer)
+        curves.pop()  # Remove weight curve
+        for curve in curves:
+            # Get previous and next key frames
+            prev_key_frame = jump_key_helper("previous")
+            next_key_frame = jump_key_helper("next")
+            if prev_key_frame and next_key_frame:                
+                # Get previous and next key ids
+                prev_key = get_curve_key_at_frame(curve, prev_key_frame)
+                prev_key_y_value = tde4.getCurveKeyPosition(curve, prev_key)[1]
+                next_key = get_curve_key_at_frame(curve, next_key_frame)
+                next_key_y_value = tde4.getCurveKeyPosition(curve, next_key)[1]                
+                # Create a temp key 
+                y_value = tde4.evaluateCurve(curve, frame)
+                key = tde4.createCurveKey(curve, [frame, y_value])
+                tde4.setCurveKeyMode(curve, key, "LINEAR")
+                tde4.setCurveKeyFixedXFlag(curve, key, 1)                
+                # Math from Maya tweenMachine
+                bias = (tween_value + 1.0) / 2.0
+                new_y_value = prev_key_y_value + ((next_key_y_value - prev_key_y_value) * bias)                
+                tde4.setCurveKeyPosition(curve, key, [frame, new_y_value])                
+                # Call create key helper function to update layer keys data
+                create_delete_key_helper(weight_curve=False, create=True, delete=False)             
     if action == 2:
         tde4.setWidgetValue(req, "tween_slider_wdgt", str(0))
         
@@ -877,7 +915,7 @@ def jump_key_callback(req, widget, action):
         cursor_update(req)
 
 
-def pg_option_menu_helper():   
+def pg_option_menu_helper(): 
     count = tde4.getWidgetValue(req, "pg_option_menu_wdgt")
     pg_list = tde4.getPGroupList(0)
     tde4.setCurrentPGroup(pg_list[count-1])
