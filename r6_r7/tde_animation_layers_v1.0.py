@@ -20,6 +20,7 @@ PREFERENCES_FILE_NAME = "patcha_3de_animation_layers_preferences.json"
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
+MUTE_LAYER_WINDOW_TITLE = "Mute Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
 DELETE_KEY_WINDOW_TITLE = "Delete Key"
 JUMP_KEY_WINDOW_TITLE = "Jump to Key"
@@ -143,7 +144,7 @@ def create_curve_set(layer_name):
     """ Create curves and keys by extracting from data by layer name
 
     Args:
-        layer_name (str): a layer name to extract data
+        layer_name (str): a layer name to create a curve set
     """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
@@ -226,12 +227,14 @@ def view_all_helper():
     frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
     dmin = get_curve_min_max_y_value(curve_list)[0]
     dmax = get_curve_min_max_y_value(curve_list)[1]         
-    if dmin and dmax:        
+    if dmin != None and dmax != None:        
         if dmin == dmax:
             dmax = dmax * 2 
     else:
         dmin = -0.5
-        dmax = 1.0 
+        dmax = 0.5
+    if dmin == 0: dmin = -0.5
+    if dmax == 0: dmax = 0.5
     tde4.setCurveAreaWidgetDimensions(req,"curve_area_wdgt",1.0,
                         frames,dmin-((dmax-dmin)*0.05),dmax+((dmax-dmin)*0.05))
     tde4.setCurveAreaWidgetFOV(req,"curve_area_wdgt",1.0-(frames*0.05),
@@ -361,13 +364,13 @@ def insert_inital_data(for_cam=False, for_pg=False):
                                                 "bake": insert_pg_bake_data(),
                                                 "frames_count": frames,
                                                 "layers_order": [],
-                                                "layers_status": {"active": None, "muted": []}}}})
+                                                "layers_status": {"active": None, "mute": []}}}})
     if for_pg == True:
         data[str(cam_pers_id)].update({str(pg_pers_id): {"layers": {},
                                                 "bake": insert_pg_bake_data(),
                                                 "frames_count": frames,
                                                 "layers_order": [],
-                                                "layers_status": {"active": None, "muted": []}}})       
+                                                "layers_status": {"active": None, "mute": []}}})       
     save_data(data)
     insert_empty_layer_data("BaseAnimation")
     insert_base_anim_data()
@@ -442,8 +445,12 @@ def set_layer_colors():
         item = get_parent_item_by_label(active_layer)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
             ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
-    # TODO
-    # Set muted layers color
+    # Set mute layers color
+    mute_layers = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"]
+    for mute_layer in mute_layers:
+        item = get_parent_item_by_label(mute_layer)
+        tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
+                MUTE_LAYER_COLOR[0], MUTE_LAYER_COLOR[1], MUTE_LAYER_COLOR[2])        
 
 
 def layer_item_callback(req, widget, action):
@@ -473,12 +480,12 @@ def layer_item_callback(req, widget, action):
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_ATOM":
             parent = tde4.getListWidgetItemParentIndex(req, "layers_list_wdgt", item)
         # Make sure it is not BaseAnimation layer
-        label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", parent)
-        if not "BaseAnimation" in label:
-            # Make sure it is not muted layer
+        layer_name = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", parent)
+        if not "BaseAnimation" in layer_name:
+            # Make sure it is not a mute layer
             if not tde4.getListWidgetItemColor(req, "layers_list_wdgt", parent) == MUTE_LAYER_COLOR:
                 data = load_data()
-                data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = label
+                data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = layer_name
                 save_data(data)
     # Set layer colors
     set_layer_colors()
@@ -506,6 +513,9 @@ def get_animlayer_increment_number():
 
 
 def sort_layers_order():
+    """
+    Sort layers order in UI
+    """    
     order = []
     parent_items = get_parent_items(False)
     for parent_item in parent_items:
@@ -542,7 +552,7 @@ def sort_layers_order():
                                  child_color[0], child_color[1], child_color[2])
     # update layers order data
     update_layers_order_data(get_parent_item_labels(False))
-    # Set layer colors(active, muted)               
+    # Set layer colors              
     set_layer_colors()
 
 
@@ -560,6 +570,12 @@ def update_layers_order_data(order_list):
 
 
 def update_active_layer_data(old_name, new_name):
+    """ Swap current layer name with new name and update data
+
+    Args:
+        old_name (str): current layer name
+        new_name (str): new name 
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
@@ -581,20 +597,59 @@ def get_active_layer_name():
     Returns:
         str: an active layer name
     """    
+    items = get_parent_items(selected=False)
+    for item in items:
+        if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == ACTIVE_LAYER_COLOR:
+            return tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
+            break
+        
+        
+def get_mute_layer_names():
+    """ Get mute layer names
+
+    Returns:
+        list: a list containing mute layer names
+    """    
+    mute_layers = []
+    items = get_parent_items(selected=False)
+    for item in items:
+        if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == MUTE_LAYER_COLOR:
+            layer_name = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
+            mute_layers.append(layer_name)
+    return mute_layers
+
+
+def update_layer_colors_data():
+    """
+    Update active and mute layer colors from UI to data
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
-    data = load_data()
-    return data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]  
-
-
-def rename_layer_callback(req, widget, action):    
+    data = load_data()      
+    items = get_parent_items(selected=False)
+    # Clear mute list first
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"] = []
     active_layer = get_active_layer_name()
-    if not active_layer:
+    if active_layer:
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = active_layer
+    mute_layers = get_mute_layer_names()
+    for mute_layer in mute_layers:
+        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"].append(mute_layer)
+    save_data(data)          
+
+
+def rename_layer_callback(req, widget, action):   
+    layer_names = get_parent_item_labels(selected=True)
+    if not len(layer_names) == 1:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
-                              "Warning, No active layer found to rename.", "Ok")
+                                   "Warning, Exactly one layer must be selected.", "Ok")
         return
+    if "BaseAnimation" in layer_names:
+        tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
+                                   "Warning, BaseAnimation layer can not be renamed.", "Ok")
+        return        
     rename_req = tde4.createCustomRequester()
-    tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name", str(active_layer))
+    tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name", "")
     tde4.setWidgetOffsets(rename_req,"layer_rename_wdgt",60,10,5,0)
     tde4.setWidgetAttachModes(rename_req,"layer_rename_wdgt","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
     tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20) 
@@ -604,14 +659,16 @@ def rename_layer_callback(req, widget, action):
             return
         if new_name in get_parent_item_labels(False):
             tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
-                                       "Warning, name already exists.", "Ok")
+                                       "Warning, layer name already exists.", "Ok")
             return
-        item = get_parent_item_by_label(active_layer)
+        item = get_parent_item_by_label(layer_names[0])
         tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
         # Update active layer data
-        update_active_layer_data(active_layer, new_name)
+        update_active_layer_data(layer_names[0], new_name)
         # Update layers order data
-        update_layers_order_data(get_parent_item_labels(False))
+        update_layers_order_data(get_parent_item_labels(selected=False))
+        # Update layer colors data
+        update_layer_colors_data()
         
         
 def delete_layers_helper(layer_names):
@@ -647,6 +704,32 @@ def delete_layers_callback(req, widget, action):
                                    "Warning, No layer(s) are selected.", "Ok")
         return
     delete_layers_helper(layer_names)
+    
+    
+def mute_layers_callback(req, widget, action):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()    
+    layer_names = get_parent_item_labels(selected=True)
+    if not layer_names:
+        tde4.postQuestionRequester(MUTE_LAYER_WINDOW_TITLE,
+                                   "Warning, No layer(s) are selected.", "Ok")
+        return
+    if "BaseAnimation" in layer_names:
+        tde4.postQuestionRequester(MUTE_LAYER_WINDOW_TITLE,
+                                   "Warning, BaseAnimation layer can not be muted.", "Ok")
+        return        
+    mute_layers = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"]
+    for layer_name in layer_names:
+        if not layer_name in mute_layers:
+            mute_layers.append(layer_name)
+    # Update active layer status data
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
+    save_data(data)
+    # Set layer colors
+    set_layer_colors()    
+    # Update layer colors data
+    update_layer_colors_data()
 
 
 def collapse_or_expand_layers_callback(req, widget, action):
@@ -655,8 +738,8 @@ def collapse_or_expand_layers_callback(req, widget, action):
             tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 1)
         if widget == "expand_all_menu_btn":
             tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 0)
-
-
+            
+            
 def get_curves_by_layer_name(layer_name):
     """ Get all curves of a layer
 
@@ -1342,6 +1425,7 @@ tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
+tde4.setWidgetCallbackFunction(req, "mute_layers_menu_btn", "mute_layers_callback")
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
