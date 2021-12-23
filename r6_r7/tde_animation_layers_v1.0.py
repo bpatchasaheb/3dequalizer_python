@@ -431,7 +431,7 @@ def get_parent_item_by_label(label):
     return item
 
 
-def set_layer_colors():
+def set_layers_status():
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()      
     data = load_data()
@@ -487,8 +487,8 @@ def layer_item_callback(req, widget, action):
                 data = load_data()
                 data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = layer_name
                 save_data(data)
-    # Set layer colors
-    set_layer_colors()
+    # Set layers status
+    set_layers_status()
     # Show timeline keys
     show_timeline_keys_helper()
     # Auto view all
@@ -551,22 +551,33 @@ def sort_layers_order():
                 tde4.setListWidgetItemColor(req, "layers_list_wdgt", child, 
                                  child_color[0], child_color[1], child_color[2])
     # update layers order data
-    update_layers_order_data(get_parent_item_labels(False))
-    # Set layer colors              
-    set_layer_colors()
+    update_layers_order_data()
+    # Set layers status         
+    set_layers_status()
 
 
-def update_layers_order_data(order_list):
-    """ Update order of the layers into data
-
-    Args:
-        order_list (list): an order list
-    """    
+def update_layers_order_data():
+    """
+    Update layers order from UI to data
+    """   
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = order_list
-    save_data(data) 
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(selected=False)
+    save_data(data)
+    
+    
+def update_layer_status_data():
+    """
+    Update layers status from UI to data
+    """    
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()      
+    active_layer = get_active_layer_name()
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = active_layer
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"] = get_mute_layer_names()            
+    save_data(data)     
 
 
 def update_active_layer_data(old_name, new_name):
@@ -616,26 +627,7 @@ def get_mute_layer_names():
         if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == MUTE_LAYER_COLOR:
             layer_name = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
             mute_layers.append(layer_name)
-    return mute_layers
-
-
-def update_layer_colors_data():
-    """
-    Update active and mute layer colors from UI to data
-    """    
-    cam_pers_id = get_cam_pers_id()
-    pg_pers_id = get_pg_pers_id()    
-    data = load_data()      
-    items = get_parent_items(selected=False)
-    # Clear mute list first
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"] = []
-    active_layer = get_active_layer_name()
-    if active_layer:
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = active_layer
-    mute_layers = get_mute_layer_names()
-    for mute_layer in mute_layers:
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"].append(mute_layer)
-    save_data(data)          
+    return mute_layers        
 
 
 def rename_layer_callback(req, widget, action):   
@@ -666,9 +658,9 @@ def rename_layer_callback(req, widget, action):
         # Update active layer data
         update_active_layer_data(layer_names[0], new_name)
         # Update layers order data
-        update_layers_order_data(get_parent_item_labels(selected=False))
-        # Update layer colors data
-        update_layer_colors_data()
+        update_layers_order_data()
+        # Update layers status data
+        update_layer_status_data()
         
         
 def delete_layers_helper(layer_names):
@@ -690,11 +682,10 @@ def delete_layers_helper(layer_names):
         tde4.removeListWidgetItem(req, "layers_list_wdgt", item)
         # Update layers data
         del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(name)]
-        # Update active layer data to None
-        data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
-    # Update layers order
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(False)
-    save_data(data)
+    # Update layer status data
+    update_layer_status_data()
+    # Update layers order data
+    update_layers_order_data() 
 
 
 def delete_layers_callback(req, widget, action):
@@ -703,9 +694,9 @@ def delete_layers_callback(req, widget, action):
         tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
         return
-    delete_layers_helper(layer_names)
-    
-    
+    delete_layers_helper(layer_names)   
+
+
 def mute_layers_callback(req, widget, action):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
@@ -723,13 +714,11 @@ def mute_layers_callback(req, widget, action):
     for layer_name in layer_names:
         if not layer_name in mute_layers:
             mute_layers.append(layer_name)
-    # Update active layer status data
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = None
     save_data(data)
-    # Set layer colors
-    set_layer_colors()    
-    # Update layer colors data
-    update_layer_colors_data()
+    # Set layers status
+    set_layers_status()    
+    # Update layers status data
+    update_layer_status_data()
 
 
 def collapse_or_expand_layers_callback(req, widget, action):
@@ -1049,8 +1038,8 @@ def pg_option_menu_helper():
         insert_inital_data(True, False)
         create_curve_set("BaseAnimation")
 
-    # Set layer colors
-    set_layer_colors()
+    # Set layers status
+    set_layers_status()
 
     # Show timeline keys
     show_timeline_keys_helper()
