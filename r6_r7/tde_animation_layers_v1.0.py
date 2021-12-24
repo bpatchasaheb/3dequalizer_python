@@ -222,7 +222,7 @@ def get_curve_min_max_y_value(curve_list):
     return min_max_values
 
 
-def view_all_helper():    
+def view_all():    
     curve_list = tde4.getCurveAreaWidgetCurveList(req, "curve_area_wdgt")
     frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())   
     dmin = get_curve_min_max_y_value(curve_list)[0]
@@ -242,7 +242,7 @@ def view_all_helper():
 
 
 def view_all_btn_callback(req, widget, action):
-    view_all_helper()
+    view_all()
 
 
 def insert_pg_editcurve_data(layer_name, edit_curve, axis):
@@ -490,10 +490,10 @@ def layer_item_callback(req, widget, action):
     # Set layers status
     set_layers_status()
     # Show timeline keys
-    show_timeline_keys_helper()
+    show_timeline_keys()
     # Auto view all
     if tde4.getWidgetValue(req, "main_wdgt_auto_view_all") == 1:
-        view_all_helper() 
+        view_all() 
 
 
 def get_animlayer_increment_number():
@@ -663,7 +663,7 @@ def rename_layer_callback(req, widget, action):
         update_layer_status_data()
         
         
-def delete_layers_helper(layer_names):
+def delete_layers(layer_names):
     """ Helper function to delete layers
 
     Args:
@@ -694,10 +694,13 @@ def delete_layers_callback(req, widget, action):
         tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
         return
-    delete_layers_helper(layer_names)   
+    delete_layers(layer_names)   
 
 
 def mute_layers_callback(req, widget, action):
+    """
+    Mute Layers menu button callback.
+    """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()    
@@ -747,7 +750,7 @@ def get_curves_by_layer_name(layer_name):
     return curve_ids
 
 
-def show_timeline_keys_helper():
+def show_timeline_keys():
     """ Show or hide timeline keys """    
     pref_data = read_preferences_file()
     if tde4.getWidgetValue(req, "main_wdgt_show_timeline_keys") == 1:
@@ -770,7 +773,7 @@ def show_timeline_keys_helper():
 
 
 def show_timeline_keys_callback(req, widget, action):
-    show_timeline_keys_helper()
+    show_timeline_keys()
 
 
 def get_curve_key_at_frame(curve, frame):
@@ -793,7 +796,7 @@ def get_curve_key_at_frame(curve, frame):
     return status
 
     
-def create_delete_key_helper(weight_curve=False, create=True, delete=False):
+def create_delete_key(weight_curve=False, create=True, delete=False):
     """ Helper function to create or delete keys
 
     Args:
@@ -843,22 +846,22 @@ def create_delete_key_helper(weight_curve=False, create=True, delete=False):
                 del data[str(cam_pers_id)][str(pg_pers_id)]["layers"][str(active_layer)]["weight"][str(frame)]         
     save_data(data)
     # Show timeline keys
-    show_timeline_keys_helper()
+    show_timeline_keys()
 
 
 def create_key_callback(req, widget, action):
-    create_delete_key_helper(weight_curve=False, create=True, delete=False)
+    create_delete_key(weight_curve=False, create=True, delete=False)
 
 
 def delete_key_callback(req, widget, action):
-    create_delete_key_helper(weight_curve=False, create=False, delete=True)
+    create_delete_key(weight_curve=False, create=False, delete=True)
 
 
 def weight_curve_key_callback(req, widget, action):
     if widget == "weight_key_btn":
-        create_delete_key_helper(weight_curve=True, create=True, delete=False)
+        create_delete_key(weight_curve=True, create=True, delete=False)
     if widget == "weight_key_delete_btn":
-        create_delete_key_helper(weight_curve=True, create=False, delete=True)
+        create_delete_key(weight_curve=True, create=False, delete=True)
 
 
 def get_auto_key_status():
@@ -881,7 +884,7 @@ def weight_slider_callback(req, widget, action):
     if active_layer:
         # Respect auto key
         if get_auto_key_status() == 1:
-            create_delete_key_helper(weight_curve=True, create=True, delete=False)
+            create_delete_key(weight_curve=True, create=True, delete=False)
         # Set curve key y value
         weight_curve = get_curves_by_layer_name(active_layer)[-1]
         key_list = tde4.getCurveKeyList(weight_curve, 0)
@@ -910,8 +913,8 @@ def tween_slider_callback(req, widget, action):
         curves.pop()  # Remove weight curve
         for curve in curves:
             # Get previous and next key frames
-            prev_key_frame = jump_key_helper("previous")
-            next_key_frame = jump_key_helper("next")
+            prev_key_frame = jump_key("previous")
+            next_key_frame = jump_key("next")
             if prev_key_frame and next_key_frame:                
                 # Get previous and next key ids
                 prev_key = get_curve_key_at_frame(curve, prev_key_frame)
@@ -928,13 +931,13 @@ def tween_slider_callback(req, widget, action):
                 new_y_value = prev_key_y_value + ((next_key_y_value - prev_key_y_value) * bias)                
                 tde4.setCurveKeyPosition(curve, key, [frame, new_y_value])                
                 # Call create key helper function to update layer keys data
-                create_delete_key_helper(weight_curve=False, create=True, delete=False)             
+                create_delete_key(weight_curve=False, create=True, delete=False)             
     if action == 2:
         tde4.setWidgetValue(req, "tween_slider_wdgt", str(0))
         
 
 
-def jump_key_helper(frame_string):
+def jump_key(frame_string):
     """ Helper function for jump to keys
 
     Args:
@@ -976,8 +979,8 @@ def jump_key_callback(req, widget, action):
     playback_start, playback_end = tde4.getCameraPlaybackRange(cam)
     frames = tde4.getCameraNoFrames(cam)
     cam = tde4.getCurrentCamera()
-    if widget == "jump_to_next_key_btn": frame = jump_key_helper("next")
-    if widget == "jump_to_prev_key_btn": frame = jump_key_helper("previous")
+    if widget == "jump_to_next_key_btn": frame = jump_key("next")
+    if widget == "jump_to_prev_key_btn": frame = jump_key("previous")
     if widget == "jump_to_pb_start_btn": frame = playback_start
     if widget == "jump_to_pb_end_btn": frame = playback_end
     if widget == "jump_to_start_btn": frame = 1
@@ -1042,7 +1045,7 @@ def pg_option_menu_helper():
     set_layers_status()
 
     # Show timeline keys
-    show_timeline_keys_helper()
+    show_timeline_keys()
 
 
 def pg_option_menu_callback(req, widget, action):
@@ -1105,8 +1108,8 @@ def load_preferences_main_ui():
         except:
             pass
 
-    show_timeline_keys_helper()
-    view_all_helper()
+    show_timeline_keys()
+    view_all()
         
 
 def preferences_widgets_callback(req, widget, action):
@@ -1145,10 +1148,6 @@ tde4.addMenuButtonWidget(req,"rename_layer_menu_btn","Rename Layer","layers_menu
 tde4.setWidgetOffsets(req,"rename_layer_menu_btn",0,0,0,0)
 tde4.setWidgetAttachModes(req,"rename_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"rename_layer_menu_btn",80,20)
-tde4.addMenuButtonWidget(req,"duplicate_layer_menu_btn","Duplicate Layer","layers_menu_wdgt")
-tde4.setWidgetOffsets(req,"duplicate_layer_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"duplicate_layer_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"duplicate_layer_menu_btn",80,20)
 tde4.addMenuSeparatorWidget(req,"w015","layers_menu_wdgt")
 tde4.setWidgetOffsets(req,"w015",0,0,0,0)
 tde4.setWidgetAttachModes(req,"w015","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
