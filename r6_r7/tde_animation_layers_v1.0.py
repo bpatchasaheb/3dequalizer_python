@@ -40,7 +40,7 @@ AXES = ["position_x", "position_y", "position_z",
 DEFAULT_LAYER_COLOR = [1.0, 1.0, 0.95]
 ACTIVE_LAYER_COLOR = [0.0, 1.0, 0.0]
 MUTE_LAYER_COLOR = [1.0, 1.0, 0.0]
-NEW_LAYER_NAME = "AnimLayer"
+NEW_ANIM_LAYER_NAME = "AnimLayer"
 PREFERENCES_WIDGETS = ["pref_wdgt_key_red", "pref_wdgt_key_green", "pref_wdgt_key_blue",
                        "pref_wdgt_key_alpha", "pref_wdgt_show_timeline_keys",
                        "pref_wdgt_auto_key", "pref_wdgt_auto_view_all",
@@ -191,7 +191,7 @@ def create_curve_set(layer_name):
     axis_data = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer_name]["weight"]
     extract_keys_from_data(weight_curve, axis_data)
 
-    # Set layer colors
+    # Set active layer while UI loading
     active_layer = str(data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"])
     if active_layer:
         item = get_parent_item_by_label(active_layer)
@@ -496,17 +496,20 @@ def layer_item_callback(req, widget, action):
         view_all() 
 
 
-def get_animlayer_increment_number():
+def get_layer_increment_number(layer_type_name):
     """ Get the increment number of a layer type
+    
+    Args:
+        label (str): layer type name(ex:AnimLayer or MergeLayer)    
 
     Returns:
         int: a number 
     """    
     nums = [0]
-    item_labels = get_parent_item_labels(False)
+    item_labels = get_parent_item_labels(selected=False)
     for label in item_labels:
-        if NEW_LAYER_NAME in label:
-            label = label.replace(NEW_LAYER_NAME, "")
+        if layer_type_name in label:
+            label = label.replace(layer_type_name, "")
             if label.isdigit():
                 nums.append(int(label))
     return max(nums)+1
@@ -574,9 +577,9 @@ def update_layer_status_data():
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()      
-    active_layer = get_active_layer_name()
+    active_layer = get_active_layer_name_from_ui()
     data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"] = active_layer
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"] = get_mute_layer_names()            
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"] = get_mute_layer_names_from_ui()            
     save_data(data)     
 
 
@@ -596,13 +599,13 @@ def update_active_layer_data(old_name, new_name):
 
 
 def create_empty_layer_callback(req, widget, action):
-    layer_name = NEW_LAYER_NAME + str(get_animlayer_increment_number())
+    layer_name = NEW_ANIM_LAYER_NAME + str(get_layer_increment_number(NEW_ANIM_LAYER_NAME))
     insert_empty_layer_data(layer_name)
     create_curve_set(layer_name)
     sort_layers_order()
 
 
-def get_active_layer_name():
+def get_active_layer_name_from_ui():
     """ Get an active layer name
 
     Returns:
@@ -615,7 +618,7 @@ def get_active_layer_name():
             break
         
         
-def get_mute_layer_names():
+def get_mute_layer_names_from_ui():
     """ Get mute layer names
 
     Returns:
@@ -757,7 +760,7 @@ def show_timeline_keys():
         cam_pers_id = get_cam_pers_id()
         pg_pers_id = get_pg_pers_id()
         data = load_data()
-        active_layer = get_active_layer_name()
+        active_layer = get_active_layer_name_from_ui()
         if not active_layer:
             tde4.deleteAllFrameSliderMarks()
             return
@@ -809,7 +812,7 @@ def create_delete_key(weight_curve=False, create=True, delete=False):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    active_layer = get_active_layer_name()
+    active_layer = get_active_layer_name_from_ui()
     if not active_layer:
         tde4.postQuestionRequester(CREATE_KEY_WINDOW_TITLE,
                                    "Warning, No active layer found to create key.", "Ok")
@@ -879,7 +882,7 @@ def weight_slider_callback(req, widget, action):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    active_layer = get_active_layer_name()
+    active_layer = get_active_layer_name_from_ui()
     value = tde4.getWidgetValue(req, "weight_slider_wdgt")
     if active_layer:
         # Respect auto key
@@ -906,7 +909,7 @@ def tween_slider_callback(req, widget, action):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    active_layer = get_active_layer_name()
+    active_layer = get_active_layer_name_from_ui()
     tween_value = tde4.getWidgetValue(req, "tween_slider_wdgt")
     if active_layer: 
         curves = get_curves_by_layer_name(active_layer)
@@ -949,7 +952,7 @@ def jump_key(frame_string):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    active_layer = get_active_layer_name()
+    active_layer = get_active_layer_name_from_ui()
     if not active_layer:
         tde4.postQuestionRequester(JUMP_KEY_WINDOW_TITLE,
                                    "Warning, No active layer found.", "Ok")
