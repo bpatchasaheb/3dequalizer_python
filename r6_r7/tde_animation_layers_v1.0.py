@@ -697,12 +697,14 @@ def delete_layers_callback(req, widget, action):
         tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
         return
-    delete_layers(layer_names)   
+    delete_layers(layer_names)
+    
+    
+def mute_or_unmute_layers(mute_string):
+    """ Mute or unmute selected layers
 
-
-def mute_layers_callback(req, widget, action):
-    """
-    Mute Layers menu button callback.
+    Args:
+        mute_string (str): string ("mute" or "unmute")
     """    
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
@@ -712,19 +714,36 @@ def mute_layers_callback(req, widget, action):
         tde4.postQuestionRequester(MUTE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
         return
+    
     if "BaseAnimation" in layer_names:
         tde4.postQuestionRequester(MUTE_LAYER_WINDOW_TITLE,
-                                   "Warning, BaseAnimation layer can not be muted.", "Ok")
+                                "Warning, BaseAnimation layer can not be muted or unmuted..", "Ok")
         return        
     mute_layers = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"]
     for layer_name in layer_names:
-        if not layer_name in mute_layers:
-            mute_layers.append(layer_name)
+        if mute_string == "mute":
+            if not layer_name in mute_layers:
+                mute_layers.append(layer_name)
+        if mute_string == "unmute":
+            if layer_name in mute_layers:
+                mute_layers.remove(layer_name)                
+                
     save_data(data)
     # Set layers status
     set_layers_status()    
     # Update layers status data
-    update_layer_status_data()
+    update_layer_status_data()    
+    
+
+
+def mute_or_unmute_layers_callback(req, widget, action):
+    """
+    Mute Layers or Unmute Layers menu button callback.
+    """   
+    if widget == "mute_layers_menu_btn": 
+        mute_or_unmute_layers("mute")
+    if widget == "unmute_layers_menu_btn": 
+        mute_or_unmute_layers("unmute")        
 
 
 def collapse_or_expand_layers_callback(req, widget, action):
@@ -799,7 +818,7 @@ def get_curve_key_at_frame(curve, frame):
     return status
 
     
-def create_delete_key(weight_curve=False, create=True, delete=False):
+def create_or_delete_key(weight_curve=False, create=True, delete=False):
     """ Helper function to create or delete keys
 
     Args:
@@ -853,18 +872,18 @@ def create_delete_key(weight_curve=False, create=True, delete=False):
 
 
 def create_key_callback(req, widget, action):
-    create_delete_key(weight_curve=False, create=True, delete=False)
+    create_or_delete_key(weight_curve=False, create=True, delete=False)
 
 
 def delete_key_callback(req, widget, action):
-    create_delete_key(weight_curve=False, create=False, delete=True)
+    create_or_delete_key(weight_curve=False, create=False, delete=True)
 
 
 def weight_curve_key_callback(req, widget, action):
     if widget == "weight_key_btn":
-        create_delete_key(weight_curve=True, create=True, delete=False)
+        create_or_delete_key(weight_curve=True, create=True, delete=False)
     if widget == "weight_key_delete_btn":
-        create_delete_key(weight_curve=True, create=False, delete=True)
+        create_or_delete_key(weight_curve=True, create=False, delete=True)
 
 
 def get_auto_key_status():
@@ -887,7 +906,7 @@ def weight_slider_callback(req, widget, action):
     if active_layer:
         # Respect auto key
         if get_auto_key_status() == 1:
-            create_delete_key(weight_curve=True, create=True, delete=False)
+            create_or_delete_key(weight_curve=True, create=True, delete=False)
         # Set curve key y value
         weight_curve = get_curves_by_layer_name(active_layer)[-1]
         key_list = tde4.getCurveKeyList(weight_curve, 0)
@@ -934,7 +953,7 @@ def tween_slider_callback(req, widget, action):
                 new_y_value = prev_key_y_value + ((next_key_y_value - prev_key_y_value) * bias)                
                 tde4.setCurveKeyPosition(curve, key, [frame, new_y_value])                
                 # Call create key helper function to update layer keys data
-                create_delete_key(weight_curve=False, create=True, delete=False)             
+                create_or_delete_key(weight_curve=False, create=True, delete=False)             
     if action == 2:
         tde4.setWidgetValue(req, "tween_slider_wdgt", str(0))
         
@@ -1416,7 +1435,8 @@ tde4.setWidgetCallbackFunction(req, "view_all_btn", "view_all_btn_callback")
 tde4.setWidgetCallbackFunction(req, "create_empty_layer_menu_btn", "create_empty_layer_callback")
 tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callback")
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
-tde4.setWidgetCallbackFunction(req, "mute_layers_menu_btn", "mute_layers_callback")
+tde4.setWidgetCallbackFunction(req, "mute_layers_menu_btn", "mute_or_unmute_layers_callback")
+tde4.setWidgetCallbackFunction(req, "unmute_layers_menu_btn", "mute_or_unmute_layers_callback")
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
