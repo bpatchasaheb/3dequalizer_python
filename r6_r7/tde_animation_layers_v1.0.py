@@ -19,8 +19,9 @@ import tde4
 PREFERENCES_FILE_NAME = "patcha_3de_animation_layers_preferences.json"
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
-DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
-MUTE_LAYER_WINDOW_TITLE = "Mute/Unmute Layer"
+DELETE_LAYER_WINDOW_TITLE = "Delete Layers"
+MUTE_LAYER_WINDOW_TITLE = "Mute/Unmute Layers"
+MERGE_LAYER_WINDOW_TITLE = "Merge Layers"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
 DELETE_KEY_WINDOW_TITLE = "Delete Key"
 JUMP_KEY_WINDOW_TITLE = "Jump to Key"
@@ -194,7 +195,7 @@ def create_curve_set(layer_name):
     # Set active layer while UI loading
     active_layer = str(data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"])
     if active_layer:
-        item = get_parent_item_by_label(active_layer)
+        item = get_layer_index_by_name(active_layer)
         if item:
             tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
                 ACTIVE_LAYER_COLOR[0],  ACTIVE_LAYER_COLOR[1],  ACTIVE_LAYER_COLOR[2])
@@ -376,16 +377,16 @@ def insert_inital_data(for_cam=False, for_pg=False):
     insert_base_anim_data()
 
 
-def get_parent_items(selected=False):
-    """ Get selected or all parent items indices
+def get_layer_indices(selected=False):
+    """ Get selected or all layer indices
 
     Args:
         selected (bool, optional): if True get only selected layers. Defaults to False.
 
     Returns:
-        list: a list containing parent indices
+        list: a list containing layer(parent item) indices
     """    
-    parent_nodes = []
+    layer_indices = []
     if selected == False:
         items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
         items = range(items)
@@ -393,37 +394,37 @@ def get_parent_items(selected=False):
         items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt")
     for item in items:
         if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_NODE":
-            parent_nodes.append(item)
-    return parent_nodes
+            layer_indices.append(item)
+    return layer_indices
 
 
-def get_parent_item_labels(selected=False):
-    """ Get selected or all parent item labels(layer names)
+def get_layer_names_from_ui(selected=False):
+    """ Get selected or all layer names
 
     Args:
         selected (bool, optional): if True get only selected layers. Defaults to False.
 
     Returns:
-        list: a list containing parent item labels(layer names)
+        list: layer names list
     """    
-    item_labels = []
-    for item in get_parent_items(selected):
+    layer_names = []
+    for item in get_layer_indices(selected):
         label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
-        item_labels.append(label)
-    return item_labels
+        layer_names.append(label)
+    return layer_names
 
 
-def get_parent_item_by_label(label):
-    """ Get a parent item index by its label
+def get_layer_index_by_name(name):
+    """ Get a layer(parent item) index by its name(label)
 
     Args:
-        label (str): a parent item label 
+        label (str): a layer name(parent item label) 
 
     Returns:
-        int: a parent item index
+        int: layer index(parent item index)
     """    
-    for item in get_parent_items(False):
-        if tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item) == label:
+    for item in get_layer_indices(False):
+        if tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item) == name:
             item = item
             break
         else:
@@ -436,19 +437,19 @@ def set_layers_status():
     pg_pers_id = get_pg_pers_id()      
     data = load_data()
     # Set default layer color for all parent nodes first
-    for parent_item in get_parent_items(False):
+    for parent_item in get_layer_indices(False):
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", parent_item,
         DEFAULT_LAYER_COLOR[0], DEFAULT_LAYER_COLOR[1], DEFAULT_LAYER_COLOR[2])
     # Set active layer color
     active_layer = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["active"]
     if active_layer:
-        item = get_parent_item_by_label(active_layer)
+        item = get_layer_index_by_name(active_layer)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
             ACTIVE_LAYER_COLOR[0], ACTIVE_LAYER_COLOR[1], ACTIVE_LAYER_COLOR[2])
     # Set mute layers color
     mute_layers = data[str(cam_pers_id)][str(pg_pers_id)]["layers_status"]["mute"]
     for mute_layer in mute_layers:
-        item = get_parent_item_by_label(mute_layer)
+        item = get_layer_index_by_name(mute_layer)
         tde4.setListWidgetItemColor(req, "layers_list_wdgt", item,
                 MUTE_LAYER_COLOR[0], MUTE_LAYER_COLOR[1], MUTE_LAYER_COLOR[2])        
 
@@ -506,7 +507,7 @@ def get_layer_increment_number(layer_type_name):
         int: a number 
     """    
     nums = [0]
-    item_labels = get_parent_item_labels(selected=False)
+    item_labels = get_layer_names_from_ui(selected=False)
     for label in item_labels:
         if layer_type_name in label:
             label = label.replace(layer_type_name, "")
@@ -520,7 +521,7 @@ def sort_layers_order():
     Sort layers order in UI
     """    
     order = []
-    parent_items = get_parent_items(False)
+    parent_items = get_layer_indices(False)
     for parent_item in parent_items:
         parent_label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt",
                                                                     parent_item)
@@ -566,7 +567,7 @@ def update_layers_order_data():
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
-    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_parent_item_labels(selected=False)
+    data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"] = get_layer_names_from_ui(selected=False)
     save_data(data)
     
     
@@ -611,7 +612,7 @@ def get_active_layer_name_from_ui():
     Returns:
         str: an active layer name
     """    
-    items = get_parent_items(selected=False)
+    items = get_layer_indices(selected=False)
     for item in items:
         if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == ACTIVE_LAYER_COLOR:
             return tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
@@ -625,7 +626,7 @@ def get_mute_layer_names_from_ui():
         list: a list containing mute layer names
     """    
     mute_layers = []
-    items = get_parent_items(selected=False)
+    items = get_layer_indices(selected=False)
     for item in items:
         if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == MUTE_LAYER_COLOR:
             layer_name = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
@@ -634,7 +635,7 @@ def get_mute_layer_names_from_ui():
 
 
 def rename_layer_callback(req, widget, action):   
-    layer_names = get_parent_item_labels(selected=True)
+    layer_names = get_layer_names_from_ui(selected=True)
     if not len(layer_names) == 1:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                    "Warning, Exactly one layer must be selected.", "Ok")
@@ -652,11 +653,11 @@ def rename_layer_callback(req, widget, action):
         new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
         if not new_name:
             return
-        if new_name in get_parent_item_labels(False):
+        if new_name in get_layer_names_from_ui(False):
             tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                        "Warning, layer name already exists.", "Ok")
             return
-        item = get_parent_item_by_label(layer_names[0])
+        item = get_layer_index_by_name(layer_names[0])
         tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
         # Update active layer data
         update_active_layer_data(layer_names[0], new_name)
@@ -676,7 +677,7 @@ def delete_layers(layer_names):
     pg_pers_id = get_pg_pers_id()    
     data = load_data()
     for name in layer_names:
-        item = get_parent_item_by_label(name)
+        item = get_layer_index_by_name(name)
         # BaseAnimation layer can not be deleted
         if name == "BaseAnimation":
             tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
@@ -692,7 +693,7 @@ def delete_layers(layer_names):
 
 
 def delete_layers_callback(req, widget, action):
-    layer_names = get_parent_item_labels(True)
+    layer_names = get_layer_names_from_ui(True)
     if not layer_names:
         tde4.postQuestionRequester(DELETE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
@@ -709,7 +710,7 @@ def mute_or_unmute_layers(mute_string):
     cam_pers_id = get_cam_pers_id()
     pg_pers_id = get_pg_pers_id()    
     data = load_data()    
-    layer_names = get_parent_item_labels(selected=True)
+    layer_names = get_layer_names_from_ui(selected=True)
     if not layer_names:
         tde4.postQuestionRequester(MUTE_LAYER_WINDOW_TITLE,
                                    "Warning, No layer(s) are selected.", "Ok")
@@ -732,8 +733,7 @@ def mute_or_unmute_layers(mute_string):
     # Set layers status
     set_layers_status()    
     # Update layers status data
-    update_layer_status_data()    
-    
+    update_layer_status_data()  
 
 
 def mute_or_unmute_layers_callback(req, widget, action):
@@ -743,11 +743,29 @@ def mute_or_unmute_layers_callback(req, widget, action):
     if widget == "mute_layers_menu_btn": 
         mute_or_unmute_layers("mute")
     if widget == "unmute_layers_menu_btn": 
-        mute_or_unmute_layers("unmute")        
+        mute_or_unmute_layers("unmute") 
+        
+        
+def merge_layers_callback(req, widget, action):
+    cam_pers_id = get_cam_pers_id()
+    pg_pers_id = get_pg_pers_id()    
+    data = load_data()      
+    layer_names = get_layer_names_from_ui(selected=True)
+    if not len(layer_names) >= 2:
+        tde4.postQuestionRequester(MERGE_LAYER_WINDOW_TITLE,
+                                   "Warning, at least two layers must be selected.", "Ok")
+        return 
+    for layer in layer_names:
+        print (data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer])
+        
+    
+    
+    
+                   
 
 
 def collapse_or_expand_layers_callback(req, widget, action):
-    for item in get_parent_items(False):
+    for item in get_layer_indices(False):
         if widget == "collapse_all_menu_btn":
             tde4.setListWidgetItemCollapsedFlag(req, "layers_list_wdgt", item, 1)
         if widget == "expand_all_menu_btn":
@@ -764,7 +782,7 @@ def get_curves_by_layer_name(layer_name):
         list: returns layer curve ids
     """    
     curve_ids = []
-    parent_item = get_parent_item_by_label(layer_name)
+    parent_item = get_layer_index_by_name(layer_name)
     for item in range(parent_item+1, parent_item+8):
         label = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
         curve_id = label.split("-")[1]
@@ -1440,6 +1458,7 @@ tde4.setWidgetCallbackFunction(req, "rename_layer_menu_btn", "rename_layer_callb
 tde4.setWidgetCallbackFunction(req, "del_layers_menu_btn", "delete_layers_callback")
 tde4.setWidgetCallbackFunction(req, "mute_layers_menu_btn", "mute_or_unmute_layers_callback")
 tde4.setWidgetCallbackFunction(req, "unmute_layers_menu_btn", "mute_or_unmute_layers_callback")
+tde4.setWidgetCallbackFunction(req, "merge_layers_menu_btn", "merge_layers_callback")
 tde4.setWidgetCallbackFunction(req, "collapse_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "expand_all_menu_btn", "collapse_or_expand_layers_callback")
 tde4.setWidgetCallbackFunction(req, "create_key_menu_btn", "create_key_callback")
