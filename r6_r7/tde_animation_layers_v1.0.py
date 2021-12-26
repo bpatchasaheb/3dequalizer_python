@@ -757,6 +757,7 @@ def merge_layers_callback(req, widget, action):
         return 
     for layer in layer_names:
         print (data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer])
+    
         
     
     
