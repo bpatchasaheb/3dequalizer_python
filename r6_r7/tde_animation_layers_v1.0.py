@@ -1141,6 +1141,7 @@ def preferences_widgets_callback(req, widget, action):
 
 # Main GUI
 frames = tde4.getCameraNoFrames(tde4.getCurrentCamera())
+
 req = tde4.createCustomRequester()
 tde4.addListWidget(req,"layers_list_wdgt","",1)
 tde4.setWidgetOffsets(req,"layers_list_wdgt",0,5,5,115)
@@ -1246,10 +1247,10 @@ tde4.addMenuWidget(req,"objpg_menu","ObjectPG","menu_bar",0)
 tde4.setWidgetOffsets(req,"objpg_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"objpg_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
 tde4.setWidgetSize(req,"objpg_menu",80,20)
-tde4.addMenuToggleWidget(req,"update_objpg_menu_btn","Update ObjectPG along with Camera","objpg_menu",1)
-tde4.setWidgetOffsets(req,"update_objpg_menu_btn",0,0,0,0)
-tde4.setWidgetAttachModes(req,"update_objpg_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
-tde4.setWidgetSize(req,"update_objpg_menu_btn",80,20)
+tde4.addMenuToggleWidget(req,"objpg_update_menu_btn","Always consistent with camera","objpg_menu",1)
+tde4.setWidgetOffsets(req,"objpg_update_menu_btn",0,0,0,0)
+tde4.setWidgetAttachModes(req,"objpg_update_menu_btn","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
+tde4.setWidgetSize(req,"objpg_update_menu_btn",80,20)
 tde4.addMenuWidget(req,"pref_menu","Preferences","menu_bar",0)
 tde4.setWidgetOffsets(req,"pref_menu",0,0,0,0)
 tde4.setWidgetAttachModes(req,"pref_menu","ATTACH_WINDOW","ATTACH_NONE","ATTACH_WINDOW","ATTACH_NONE")
