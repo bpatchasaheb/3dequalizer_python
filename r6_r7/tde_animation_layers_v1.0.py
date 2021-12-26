@@ -20,7 +20,7 @@ PREFERENCES_FILE_NAME = "patcha_3de_animation_layers_preferences.json"
 WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layer"
-MUTE_LAYER_WINDOW_TITLE = "Mute Layer"
+MUTE_LAYER_WINDOW_TITLE = "Mute/Unmute Layer"
 CREATE_KEY_WINDOW_TITLE = "Create Key"
 DELETE_KEY_WINDOW_TITLE = "Delete Key"
 JUMP_KEY_WINDOW_TITLE = "Jump to Key"
@@ -773,7 +773,9 @@ def get_curves_by_layer_name(layer_name):
 
 
 def show_timeline_keys():
-    """ Show or hide timeline keys """    
+    """
+    Show or hide timeline keys
+    """    
     pref_data = read_preferences_file()
     if tde4.getWidgetValue(req, "main_wdgt_show_timeline_keys") == 1:
         cam_pers_id = get_cam_pers_id()
