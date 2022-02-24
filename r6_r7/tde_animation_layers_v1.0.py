@@ -998,7 +998,7 @@ def jump_key(frame_string):
         tde4.postQuestionRequester(JUMP_KEY_WINDOW_TITLE,
                                    "Warning, No active layer found.", "Ok")
         return
-    curve = get_curves_by_layer_name(active_layer)[0]
+    # curve = get_curves_by_layer_name(active_layer)[0]
     # Extract key frames and sort
     key_frames = data[str(cam_pers_id)][str(pg_pers_id)]["layers"][active_layer][AXES[0]].keys()
     key_frames = [int(key) for key in key_frames]
