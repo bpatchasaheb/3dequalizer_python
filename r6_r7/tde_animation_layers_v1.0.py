@@ -653,7 +653,7 @@ def rename_layer_callback(req, widget, action):
         new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
         if not new_name:
             return
-        if new_name in get_layer_names_from_ui(False):
+        if new_name in get_layer_names_from_ui(selected=False):
             tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                        "Warning, layer name already exists.", "Ok")
             return
