@@ -141,7 +141,7 @@ def extract_keys_from_data(curve, axis_data):
         tde4.setCurveKeyFixedXFlag(curve, key, 1)
 
 
-def create_curve_set(layer_name): 
+def create_curve_set_from_data(layer_name): 
     """ Create curves and keys by extracting from data by layer name
 
     Args:
@@ -386,16 +386,12 @@ def get_layer_indices(selected=False):
     Returns:
         list: a list containing layer(parent item) indices
     """    
-    layer_indices = []
     if selected == False:
         items = tde4.getListWidgetNoItems(req, "layers_list_wdgt")
         items = range(items)
     else:
         items = tde4.getListWidgetSelectedItems(req, "layers_list_wdgt")
-    for item in items:
-        if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_NODE":
-            layer_indices.append(item)
-    return layer_indices
+    return [item for item in items if tde4.getListWidgetItemType(req, "layers_list_wdgt", item) == "LIST_ITEM_NODE"]
 
 
 def get_layer_names_from_ui(selected=False):
@@ -602,7 +598,7 @@ def update_active_layer_data(old_name, new_name):
 def create_empty_layer_callback(req, widget, action):
     layer_name = NEW_ANIM_LAYER_NAME + str(get_layer_increment_number(NEW_ANIM_LAYER_NAME))
     insert_empty_layer_data(layer_name)
-    create_curve_set(layer_name)
+    create_curve_set_from_data(layer_name)
     sort_layers_order()
 
 
@@ -748,13 +744,13 @@ def mute_or_unmute_layers_callback(req, widget, action):
         
 def merge_layers_callback(req, widget, action):
     cam_pers_id = get_cam_pers_id()
-    pg_pers_id = get_pg_pers_id()    
-    data = load_data()      
+    pg_pers_id = get_pg_pers_id()
+    data = load_data()
     layer_names = get_layer_names_from_ui(selected=True)
-    if not len(layer_names) >= 2:
+    if len(layer_names) < 2:
         tde4.postQuestionRequester(MERGE_LAYER_WINDOW_TITLE,
                                    "Warning, at least two layers must be selected.", "Ok")
-        return 
+        return
     for layer in layer_names:
         print (data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer])
         
@@ -944,6 +940,7 @@ def weight_slider_callback(req, widget, action):
             tde4.setWidgetValue(req, "weight_slider_wdgt", str(1))
             
             
+            
 def tween_slider_callback(req, widget, action):
     cam = tde4.getCurrentCamera()
     frame = tde4.getCurrentFrame(cam)
@@ -1080,10 +1077,10 @@ def pg_option_menu_helper():
     if is_frame_count_changed == False and is_pg_animation_changed() == False:
         layers_order = data[str(cam_pers_id)][str(pg_pers_id)]["layers_order"]
         for layer_name in layers_order:
-            create_curve_set(layer_name)
+            create_curve_set_from_data(layer_name)
     else:
-        insert_inital_data(True, False)
-        create_curve_set("BaseAnimation")
+        insert_inital_data(False, True)
+        create_curve_set_from_data("BaseAnimation")
 
     # Set layers status
     set_layers_status()
