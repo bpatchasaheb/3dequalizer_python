@@ -627,24 +627,35 @@ def get_mute_layer_names_from_ui():
         if tde4.getListWidgetItemColor(req, "layers_list_wdgt", item) == MUTE_LAYER_COLOR:
             layer_name = tde4.getListWidgetItemLabel(req, "layers_list_wdgt", item)
             mute_layers.append(layer_name)
-    return mute_layers        
+    return mute_layers 
+       
+
+def rename_layer(layer_current_name, layer_new_name):
+    item = get_layer_index_by_name(layer_current_name)
+    tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, layer_new_name)
+    # Update active layer data
+    update_active_layer_data(layer_current_name, layer_new_name)
+    # Update layers order data
+    update_layers_order_data()
+    # Update layers status data
+    update_layer_status_data()    
 
 
 def rename_layer_callback(req, widget, action):   
     layer_names = get_layer_names_from_ui(selected=True)
-    if not len(layer_names) == 1:
+    if len(layer_names) != 1:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                    "Warning, Exactly one layer must be selected.", "Ok")
         return
     if "BaseAnimation" in layer_names:
         tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                    "Warning, BaseAnimation layer can not be renamed.", "Ok")
-        return        
+        return
     rename_req = tde4.createCustomRequester()
     tde4.addTextFieldWidget(rename_req, "layer_rename_wdgt", "Name", "")
     tde4.setWidgetOffsets(rename_req,"layer_rename_wdgt",60,10,5,0)
     tde4.setWidgetAttachModes(rename_req,"layer_rename_wdgt","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_WINDOW","ATTACH_NONE")
-    tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20) 
+    tde4.setWidgetSize(rename_req,"layer_rename_wdgt",80,20)
     if tde4.postCustomRequester(rename_req, RENAME_LAYER_WINDOW_TITLE, 600, 100, "Ok", "Cancel") == 1:
         new_name = tde4.getWidgetValue(rename_req,"layer_rename_wdgt")
         if not new_name:
@@ -653,14 +664,17 @@ def rename_layer_callback(req, widget, action):
             tde4.postQuestionRequester(RENAME_LAYER_WINDOW_TITLE,
                                        "Warning, layer name already exists.", "Ok")
             return
-        item = get_layer_index_by_name(layer_names[0])
-        tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
-        # Update active layer data
-        update_active_layer_data(layer_names[0], new_name)
-        # Update layers order data
-        update_layers_order_data()
-        # Update layers status data
-        update_layer_status_data()
+        
+        # item = get_layer_index_by_name(layer_names[0])
+        # tde4.setListWidgetItemLabel(req, "layers_list_wdgt", item, new_name)
+        # # Update active layer data
+        # update_active_layer_data(layer_names[0], new_name)
+        # # Update layers order data
+        # update_layers_order_data()
+        # # Update layers status data
+        # update_layer_status_data()
+        
+        rename_layer(layer_names[0], new_name)
         
         
 def delete_layers(layer_names):
@@ -739,7 +753,32 @@ def mute_or_unmute_layers_callback(req, widget, action):
     if widget == "mute_layers_menu_btn": 
         mute_or_unmute_layers("mute")
     if widget == "unmute_layers_menu_btn": 
-        mute_or_unmute_layers("unmute") 
+        mute_or_unmute_layers("unmute")
+        
+
+def get_merge_transform_at_frame(layer_names, frame): 
+    """Returns a transform list [tx, ty, tz, rx, ry, rz] 
+
+    Args:
+        layer_names (list): layer names list from UI
+        frame (int): frame number
+    """ 
+    
+    transform = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]    
+    
+    for layer_name in layer_names:
+        item = get_layer_index_by_name(layer_name)
+        curves = get_curves_by_layer_name(layer_name)
+        for count, curve in enumerate(curves):
+            value = tde4.evaluateCurve(curve, frame)
+            
+
+        
+        
+        
+        
+        
+        
         
         
 def merge_layers_callback(req, widget, action):
@@ -751,8 +790,9 @@ def merge_layers_callback(req, widget, action):
         tde4.postQuestionRequester(MERGE_LAYER_WINDOW_TITLE,
                                    "Warning, at least two layers must be selected.", "Ok")
         return
-    for layer in layer_names:
-        print (data[str(cam_pers_id)][str(pg_pers_id)]["layers"][layer])
+
+    
+    get_merge_transform_at_frame(layer_names, 1)
         
     
         
