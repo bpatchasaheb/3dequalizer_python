@@ -17,7 +17,7 @@ from vl_sdv import*
 import tde4
 
 PREFERENCES_FILE_NAME = "patcha_3de_animation_layers_preferences.json"
-WINDOW_TITLE = "Patcha 3DE Animation Layers v1.0"
+WINDOW_TITLE = "Patcha 3DE Animation Layers v1.1"
 RENAME_LAYER_WINDOW_TITLE = "Rename Layer"
 DELETE_LAYER_WINDOW_TITLE = "Delete Layers"
 MUTE_LAYER_WINDOW_TITLE = "Mute/Unmute Layers"
